@@ -1,67 +1,66 @@
 <template>
   <div class="login-container">
-    <div class="login-image-side">
-      <div class="login-quote" data-aos="fade-up">
-        <h1 class="quote-text">"Thời gian là thứ duy nhất không thể lấy lại."</h1>
-        <p class="fs-5 text-white-50">- WatchStore Collection -</p>
+    <div class="login-wrapper border-gold-subtle shadow-lg">
+      
+      <div class="text-center mb-5">
+        <h1 class="brand-text d-inline-block mb-4">WATCH<span class="gold-text">STORE</span></h1>
+        <h2 class="login-title luxury-font text-uppercase letter-spacing-1 text-dark">Thành viên VIP</h2>
+        <div class="divider-gold mx-auto mt-2 mb-3"></div>
+        <p class="login-subtitle letter-spacing-1 small">Đăng nhập để khám phá đặc quyền của bạn</p>
       </div>
-    </div>
 
-    <div class="login-form-side">
-      <div class="login-wrapper">
-        <div class="mb-4 text-center">
-          <h2 class="login-title">Chào mừng trở lại</h2>
-          <p class="login-subtitle">Đăng nhập để trải nghiệm đặc quyền VIP.</p>
-        </div>
+      <div v-if="errorMsg" class="alert custom-alert-danger mb-4 rounded-1 d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i> 
+        <span class="small fw-bold letter-spacing-1 text-uppercase">{{ errorMsg }}</span>
+      </div>
 
-        <div class="divider d-flex align-items-center mb-4">
-          <span class="line flex-grow-1"></span>
-          <span class="text-muted px-3 small text-uppercase">Hoặc đăng nhập bằng Email</span>
-          <span class="line flex-grow-1"></span>
-        </div>
+      <button type="button" class="btn-google mb-4" @click="handleGoogleLogin">
+        <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google" class="google-icon"/>
+        <span class="fw-bold letter-spacing-1 small text-uppercase">Tiếp tục với Google</span>
+      </button>
 
-        <div v-if="errorMsg" class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger mb-4 shadow-sm rounded-3">
-          <i class="bi bi-exclamation-circle-fill me-2"></i> {{ errorMsg }}
-        </div>
+      <div class="divider d-flex align-items-center mb-4 opacity-75">
+        <span class="line flex-grow-1 border-gold-subtle"></span>
+        <span class="text-muted px-3 small text-uppercase fw-bold letter-spacing-1" style="font-size: 10px;">Hoặc sử dụng Email</span>
+        <span class="line flex-grow-1 border-gold-subtle"></span>
+      </div>
 
-        <form @submit.prevent="handleLogin">
-          <div class="form-floating mb-3">
-            <input type="email" v-model="form.email" class="form-control" id="user" placeholder="name@example.com" required :disabled="isLoading">
-            <label for="user"><i class="bi bi-envelope me-2"></i>Email của bạn</label>
-          </div>
-          
-          <div class="form-floating mb-4 position-relative">
-            <input :type="showPassword ? 'text' : 'password'" v-model="form.password" class="form-control" id="pass" placeholder="Mật khẩu" required :disabled="isLoading">
-            <label for="pass"><i class="bi bi-lock me-2"></i>Mật khẩu</label>
-            <i class="bi position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer text-muted" 
-               :class="showPassword ? 'bi-eye-slash' : 'bi-eye'" 
-               @click="showPassword = !showPassword"></i>
-          </div>
-           <button type="button" class="btn-google mb-4 shadow-sm" @click="handleGoogleLogin">
-          <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google" class="me-2"/>
-          Tiếp tục với Google
-        </button>
-
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="form-check">
-              <input class="form-check-input shadow-none cursor-pointer" type="checkbox" v-model="form.remember" id="remember">
-              <label class="form-check-label text-muted small cursor-pointer" for="remember">Ghi nhớ tôi</label>
-            </div>
-            <router-link to="/forgot-password" class="text-decoration-none small text-primary fw-bold hover-underline">Quên mật khẩu?</router-link>
-          </div>
-
-          <button class="btn-login shadow" type="submit" :disabled="isLoading">
-            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            {{ isLoading ? 'Đang xác thực...' : 'Đăng nhập' }}
-          </button>
-        </form>
+      <form @submit.prevent="handleLogin">
         
-
-        <div class="text-center mt-5">
-          <span class="text-muted small">Bạn chưa có tài khoản?</span>
-          <router-link to="/register" class="text-decoration-none fw-bold ms-1 text-danger hover-underline">Đăng ký ngay</router-link>
+        <div class="mb-4 position-relative">
+          <label class="form-label fw-bold text-muted text-uppercase letter-spacing-1 small mb-2 d-block">Địa chỉ Email</label>
+          <div class="input-group custom-input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" v-model="form.email" class="form-control" placeholder="Tên đăng nhập..." required :disabled="isLoading">
+          </div>
         </div>
+        
+        <div class="mb-4 position-relative">
+          <label class="form-label fw-bold text-muted text-uppercase letter-spacing-1 small mb-2 d-block">Mật khẩu bảo mật</label>
+          <div class="input-group custom-input-group">
+            <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+            <input :type="showPassword ? 'text' : 'password'" v-model="form.password" class="form-control pe-5" placeholder="Nhập mật khẩu..." required :disabled="isLoading">
+            <i class="bi position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer text-muted fs-5 eye-icon" 
+               :class="showPassword ? 'bi-eye-slash' : 'bi-eye'" 
+               @click="showPassword = !showPassword" style="z-index: 10;"></i>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mb-5">
+          <router-link to="/forgot-password" class="forgot-link text-decoration-none small text-uppercase letter-spacing-1 fw-bold">Quên mật khẩu?</router-link>
+        </div>
+
+        <button class="btn-login w-100 text-uppercase letter-spacing-1 fw-bold mb-4 py-3 shadow-sm" type="submit" :disabled="isLoading">
+          <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          {{ isLoading ? 'Đang xác thực...' : 'Đăng Nhập Hệ Thống' }}
+        </button>
+      </form>
+
+      <div class="text-center pt-4 border-top border-gold-subtle opacity-75">
+        <span class="text-muted small text-uppercase letter-spacing-1" style="font-size: 11px;">Chưa sở hữu tài khoản?</span><br>
+        <router-link to="/register" class="register-link text-decoration-none fw-bold mt-2 d-inline-block text-uppercase letter-spacing-1">Đăng ký thành viên VIP</router-link>
       </div>
+
     </div>
   </div>
 </template>
@@ -82,7 +81,6 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
-    // 1. Gọi API Backend (Spring Boot)
     const res = await api.post('/auth/login', {
       email: form.email,
       password: form.password
@@ -90,20 +88,14 @@ const handleLogin = async () => {
 
     console.log("Đăng nhập thành công:", res.data);
 
-    // 2. Lưu trữ Token và Role để Header/Router sử dụng
     localStorage.setItem('token', res.data.token);
     
-    // Lưu Role (Hỗ trợ cả dạng mảng roles hoặc chuỗi role đơn lẻ)
     const roleValue = res.data.role || (res.data.roles && res.data.roles[0]?.authority) || res.data.roles?.[0];
     localStorage.setItem('role', roleValue);
     
-    // Lưu thông tin user để hiển thị tên trên Header
     localStorage.setItem('user', JSON.stringify(res.data.user || res.data));
 
-    // 3. ĐIỀU HƯỚNG: Luôn về trang chủ (Home) theo yêu cầu của mày
-    // Không phân biệt Admin hay User ở đây
     router.push('/').then(() => {
-        // Reload nhẹ để Header nhận diện lại role trong localStorage
         window.location.reload();
     });
 
@@ -112,7 +104,7 @@ const handleLogin = async () => {
     if (error.response && error.response.status === 401) {
       errorMsg.value = "Sai email hoặc mật khẩu. Vui lòng thử lại!";
     } else {
-      errorMsg.value = "Không thể kết nối đến máy chủ. Kiểm tra IntelliJ!";
+      errorMsg.value = "Không thể kết nối đến máy chủ.";
     }
   } finally {
     isLoading.value = false;
@@ -120,50 +112,93 @@ const handleLogin = async () => {
 };
 
 const handleGoogleLogin = () => {
-  alert("Chức năng Đăng nhập Google đang được tích hợp!");
+  window.location.href = "http://localhost:8080/oauth2/authorization/google";
 };
 </script>
 
 <style scoped>
-/* Reset & Layout */
-.login-container { min-height: 100vh; display: flex; margin-top: -80px; font-family: 'Inter', sans-serif;}
-.cursor-pointer { cursor: pointer; }
+/* ==========================================
+   GIAO DIỆN LUXURY LOGIN
+========================================== */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fdfbf7; /* Màu Kem Sữa Hoàng Gia */
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  padding: 2rem 1rem;
+  background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); /* Pattern chìm tạo cảm giác cao cấp */
+}
 
-/* Image Side */
-.login-image-side { background: url('https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?q=80&w=2574&auto=format&fit=crop') center/cover no-repeat; position: relative; flex: 1.2; display: flex; align-items: center; justify-content: center; color: white; }
-.login-image-side::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(20,20,20,0.4) 100%); }
-.login-quote { position: relative; z-index: 2; text-align: center; padding: 2rem; max-width: 80%; }
-.quote-text { font-family: 'Playfair Display', serif; font-size: 3rem; margin-bottom: 1.5rem; line-height: 1.3; text-shadow: 0 10px 20px rgba(0,0,0,0.5); font-weight: 700;}
+.luxury-font { font-family: 'Playfair Display', serif; }
+.letter-spacing-1 { letter-spacing: 1px; }
+.gold-text { color: #B38728 !important; }
 
-/* Form Side */
-.login-form-side { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem; background: #fff; max-width: 550px; }
-.login-wrapper { width: 100%; max-width: 420px; }
-.login-title { font-size: 2.2rem; font-weight: 800; color: #111; letter-spacing: -1px; }
-.login-subtitle { color: #666; font-size: 1.1rem; }
+/* Wrapper Form */
+.login-wrapper {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  padding: 3.5rem 3rem;
+  border-radius: 2px; /* Không bo góc tròn */
+  border: 1px solid #f0e6d2;
+}
 
-/* Google Button */
-.btn-google { display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-weight: 600; color: #333; transition: all 0.3s ease; }
-.btn-google:hover { background: #f8f9fa; border-color: #ccc; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+/* Logo & Title */
+.brand-text { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 2.2rem; color: #111; letter-spacing: 4px; }
+.login-title { font-size: 1.5rem; }
+.divider-gold { width: 50px; height: 2px; background: linear-gradient(to right, #B38728, #D4AF37, #B38728); }
+
+/* Alerts */
+.custom-alert-danger { background: #fff5f5; border: 1px solid #8b0000; border-left: 4px solid #8b0000; color: #8b0000; }
+
+/* Nút Google */
+.btn-google {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 14px; background: #fafafa;
+  border: 1px solid #eaeaea; border-radius: 2px;
+  color: #555; transition: all 0.3s ease; cursor: pointer;
+}
+.btn-google:hover { background: #fff; border-color: #D4AF37; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); color: #B38728; }
+.google-icon { width: 22px; height: 22px; margin-right: 12px; }
 
 /* Divider */
-.divider .line { height: 1px; background-color: #eee; }
+.border-gold-subtle { border-color: #eaeaea !important; }
 
-/* Inputs */
-.form-floating > .form-control { border: 2px solid transparent; border-bottom: 2px solid #ddd; border-radius: 0; padding-left: 0; padding-right: 40px; box-shadow: none !important; background: transparent; transition: all 0.3s; font-weight: 500;}
-.form-floating > .form-control:focus { border-bottom-color: #d0021b; }
-.form-floating > label { padding-left: 0; color: #888; transition: all 0.3s; }
-.form-floating > .form-control:focus ~ label, .form-floating > .form-control:not(:placeholder-shown) ~ label { color: #d0021b; font-weight: 600; }
+/* Form Inputs */
+.custom-input-group { border: 1px solid #e0e0e0; border-radius: 2px; transition: all 0.3s ease; background: #fafafa; }
+.custom-input-group .input-group-text { background-color: transparent; border: none; color: #B38728; padding-right: 5px; }
+.custom-input-group .form-control { border: none; background-color: transparent; box-shadow: none; padding: 12px 10px; font-size: 15px; color: #333; }
+.custom-input-group:focus-within { border-color: #D4AF37; background: #fff; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
 
-/* Main Button */
-.btn-login { background: #111; color: #fff; height: 55px; border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; width: 100%; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.btn-login:hover:not(:disabled) { background: #d0021b; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(208, 2, 27, 0.3) !important; }
-.btn-login:disabled { background: #ccc; cursor: not-allowed; }
+.eye-icon { transition: color 0.2s; }
+.eye-icon:hover { color: #B38728 !important; }
+.cursor-pointer { cursor: pointer; }
 
-.hover-underline:hover { text-decoration: underline !important; }
+/* Links */
+.forgot-link { color: #888; transition: color 0.3s; }
+.forgot-link:hover { color: #B38728; text-decoration: none !important; }
+
+.register-link { color: #111; transition: all 0.3s; position: relative; }
+.register-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1px; background: #D4AF37; transition: width 0.3s ease; }
+.register-link:hover { color: #D4AF37; }
+.register-link:hover::after { width: 100%; }
+
+/* Nút Submit */
+.btn-login {
+  background: linear-gradient(135deg, #D4AF37 0%, #FBF5B7 50%, #B38728 100%);
+  color: #111; border: 1px solid #D4AF37; border-radius: 2px;
+  transition: all 0.4s ease;
+}
+.btn-login:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FBF5B7 0%, #D4AF37 50%, #AA771C 100%);
+  transform: translateY(-2px); box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+}
+.btn-login:disabled { background: #e0e0e0; border-color: #ccc; color: #888; cursor: not-allowed; box-shadow: none; }
 
 /* Responsive */
-@media (max-width: 992px) { 
-  .login-image-side { display: none; } 
-  .login-form-side { max-width: 100%; padding: 2rem; } 
+@media (max-width: 576px) {
+  .login-wrapper { padding: 2.5rem 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none; }
 }
 </style>
