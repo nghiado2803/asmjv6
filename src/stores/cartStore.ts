@@ -15,6 +15,11 @@ export const useCartStore = defineStore('cart', () => {
     return items.value.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   });
 
+  // 👉 THỦ PHẠM ĐÂY: Hàm tính tổng số lượng sản phẩm để gắn lên Header
+  const totalQuantity = computed(() => {
+    return items.value.reduce((sum, item) => sum + item.quantity, 0);
+  });
+
   // Thêm vào giỏ
   const addToCart = (product: any, quantity: number = 1) => {
     const existing = items.value.find(i => i.productId === product.id);
@@ -50,5 +55,6 @@ export const useCartStore = defineStore('cart', () => {
     items.value = [];
   };
 
-  return { items, totalPrice, addToCart, updateQuantity, removeItem, clearCart };
+  // 👉 THỦ PHẠM 2: Phải khai báo totalQuantity ở đây thì bên ngoài mới gọi được!
+  return { items, totalPrice, totalQuantity, addToCart, updateQuantity, removeItem, clearCart };
 });
