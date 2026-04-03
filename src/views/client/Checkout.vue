@@ -1,107 +1,129 @@
 <template>
-  <div class="container py-5">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold">Thanh toán</h2>
-      <p class="text-muted">Hoàn tất đơn hàng của bạn</p>
+  <div class="container py-5 checkout-page">
+    
+    <div class="text-center mb-5 mt-2">
+      <h2 class="luxury-font fw-bold text-uppercase letter-spacing-1 mb-2">Thanh Toán</h2>
+      <div class="divider-gold mx-auto my-3"></div>
+      <p class="text-muted letter-spacing-1 small">Hoàn tất thông tin để sở hữu tuyệt tác của bạn</p>
     </div>
 
     <form @submit.prevent="submitOrder">
       <div class="row g-5">
+        
         <div class="col-lg-7">
-          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-geo-alt-fill me-2"></i>Thông tin giao hàng</h5>
-            <div class="row g-3">
+          
+          <div class="card border-gold-subtle shadow-sm rounded-1 p-4 p-lg-5 mb-4 bg-white">
+            <h5 class="luxury-font fw-bold mb-4 text-uppercase border-bottom pb-3"><i class="bi bi-geo-alt gold-text me-2"></i>Thông tin giao hàng</h5>
+            <div class="row g-4">
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Họ và tên</label>
-                <div class="input-group">
+                <label class="form-label fw-bold small text-muted text-uppercase letter-spacing-1">Họ và tên</label>
+                <div class="input-group custom-input-group">
                   <span class="input-group-text"><i class="bi bi-person"></i></span>
-                  <input type="text" v-model="order.fullName" class="form-control py-2" placeholder="Nguyễn Văn A" required>
+                  <input type="text" v-model="order.fullName" class="form-control py-2" placeholder="Tên người nhận..." required>
                 </div>
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small text-muted">Số điện thoại</label>
-                <div class="input-group">
+                <label class="form-label fw-bold small text-muted text-uppercase letter-spacing-1">Số điện thoại</label>
+                <div class="input-group custom-input-group">
                   <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                   <input type="text" v-model="order.phoneNumber" class="form-control py-2" placeholder="09xx..." required>
                 </div>
               </div>
               <div class="col-12">
-                <label class="form-label fw-bold small text-muted">Địa chỉ nhận hàng</label>
-                <div class="input-group">
+                <label class="form-label fw-bold small text-muted text-uppercase letter-spacing-1">Địa chỉ nhận hàng</label>
+                <div class="input-group custom-input-group">
                   <span class="input-group-text"><i class="bi bi-map"></i></span>
                   <input type="text" v-model="order.address" class="form-control py-2" placeholder="Số nhà, đường, phường/xã..." required>
                 </div>
               </div>
               <div class="col-12">
-                <label class="form-label fw-bold small text-muted">Ghi chú (Tùy chọn)</label>
-                <textarea v-model="order.note" class="form-control" rows="2" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."></textarea>
+                <label class="form-label fw-bold small text-muted text-uppercase letter-spacing-1">Ghi chú (Tùy chọn)</label>
+                <textarea v-model="order.note" class="form-control custom-textarea" rows="3" placeholder="Yêu cầu đặc biệt về thời gian giao hàng, gói quà..."></textarea>
               </div>
             </div>
           </div>
 
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-credit-card-2-front-fill me-2"></i>Phương thức thanh toán</h5>
+          <div class="card border-gold-subtle shadow-sm rounded-1 p-4 p-lg-5 bg-white">
+            <h5 class="luxury-font fw-bold mb-4 text-uppercase border-bottom pb-3"><i class="bi bi-credit-card-2-front gold-text me-2"></i>Phương thức thanh toán</h5>
             <div class="d-flex flex-column gap-3">
+              
               <div>
                 <input type="radio" v-model="order.paymentMethod" id="cod" value="COD" class="payment-check">
                 <label class="payment-label w-100" for="cod">
-                  <div class="payment-option rounded-3 p-3 d-flex align-items-center">
-                    <i class="bi bi-cash-stack fs-3 text-success me-3"></i>
+                  <div class="payment-option rounded-1 p-3 p-md-4 d-flex align-items-center">
+                    <div class="icon-wrapper me-4">
+                      <i class="bi bi-cash-stack fs-2"></i>
+                    </div>
                     <div>
-                      <h6 class="fw-bold mb-0">Thanh toán khi nhận hàng (COD)</h6>
-                      <small class="text-muted">Thanh toán bằng tiền mặt khi shipper giao hàng.</small>
+                      <h6 class="fw-bold mb-1 text-uppercase letter-spacing-1 text-dark">Thanh toán khi nhận hàng (COD)</h6>
+                      <small class="text-muted">Thanh toán bằng tiền mặt khi chuyên viên giao hàng tận nơi.</small>
                     </div>
                   </div>
                 </label>
               </div>
+              
               <div>
                 <input type="radio" v-model="order.paymentMethod" id="banking" value="BANKING" class="payment-check">
                 <label class="payment-label w-100" for="banking">
-                  <div class="payment-option rounded-3 p-3 d-flex align-items-center">
-                    <i class="bi bi-bank fs-3 text-primary me-3"></i>
+                  <div class="payment-option rounded-1 p-3 p-md-4 d-flex align-items-center">
+                    <div class="icon-wrapper me-4">
+                      <i class="bi bi-bank fs-2"></i>
+                    </div>
                     <div>
-                      <h6 class="fw-bold mb-0">Chuyển khoản (PayOS)</h6>
-                      <small class="text-muted">Quét mã QR tự động xác nhận qua cổng PayOS.</small>
+                      <h6 class="fw-bold mb-1 text-uppercase letter-spacing-1 text-dark">Chuyển khoản / Quét mã QR</h6>
+                      <small class="text-muted">Thanh toán bảo mật tự động xác nhận qua cổng PayOS.</small>
                     </div>
                   </div>
                 </label>
               </div>
+
             </div>
           </div>
         </div>
 
         <div class="col-lg-5">
-          <div class="card border-0 shadow rounded-4 sticky-top" style="top: 100px; z-index: 1;">
-            <div class="card-header bg-white border-0 pt-4 pb-0"><h5 class="fw-bold">Đơn hàng của bạn</h5></div>
-            <div class="card-body p-4">
+          <div class="card summary-card border-gold-subtle shadow-sm rounded-1 sticky-top" style="top: 100px; z-index: 1;">
+            <div class="card-header bg-transparent border-bottom border-gold-subtle pt-4 pb-3">
+              <h5 class="luxury-font fw-bold text-center text-uppercase letter-spacing-1 mb-0">Tóm tắt đơn hàng</h5>
+            </div>
+            <div class="card-body p-4 p-lg-5">
               
-              <div v-for="item in cartStore.items" :key="item.productId" class="d-flex align-items-center mb-3 pb-3 border-bottom border-dashed">
-                <div class="position-relative">
-                  <img :src="getImageUrl(item.imageUrl)" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;" @error="handleImageError">
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary border border-light">{{ item.quantity }}</span>
+              <div v-for="item in cartStore.items" :key="item.productId" class="d-flex align-items-center mb-4 pb-4 border-bottom border-dashed">
+                <div class="position-relative img-wrap bg-white border-gold-subtle p-1">
+                  <img :src="getImageUrl(item.imageUrl)" class="img-fluid" style="width: 65px; height: 65px; object-fit: contain; mix-blend-mode: multiply;" @error="handleImageError">
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-dark border border-light text-white" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px;">
+                    {{ item.quantity }}
+                  </span>
                 </div>
-                <div class="ms-3 flex-grow-1">
-                  <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">{{ item.name }}</h6>
-                  <small class="text-muted">{{ formatPrice(item.price) }}</small>
+                <div class="ms-4 flex-grow-1">
+                  <h6 class="fw-bold mb-1 text-dark text-truncate" style="max-width: 160px; font-size: 15px;">{{ item.name }}</h6>
+                  <small class="text-muted letter-spacing-1">{{ formatPrice(item.price) }}</small>
                 </div>
-                <span class="fw-bold small text-end">{{ formatPrice(item.price * item.quantity) }}</span>
+                <span class="fw-bold text-end text-dark">{{ formatPrice(item.price * item.quantity) }}</span>
               </div>
 
-              <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
-                <span class="fs-5 fw-bold">Tổng cộng</span>
+              <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
+                <span class="text-uppercase fw-bold letter-spacing-1 text-muted">Vận chuyển</span>
+                <span class="gold-text fw-bold text-uppercase small">Miễn phí</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-4 mb-5 pt-3 border-top border-gold-subtle">
+                <span class="fs-5 fw-bold text-uppercase letter-spacing-1">Tổng cộng</span>
                 <div class="text-end">
-                  <span class="fs-4 fw-bold text-danger">{{ formatPrice(cartStore.totalPrice) }}</span>
-                  <div class="small text-muted fst-italic">(Đã bao gồm VAT)</div>
+                  <span class="fs-4 fw-bold text-danger luxury-font">{{ formatPrice(cartStore.totalPrice) }}</span>
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-dark w-100 btn-lg rounded-pill fw-bold shadow-sm py-3" :disabled="cartStore.items.length === 0 || isSubmitting">
+              <button type="submit" class="btn btn-gold w-100 btn-lg rounded-1 fw-bold py-3 text-uppercase letter-spacing-1" :disabled="cartStore.items.length === 0 || isSubmitting">
                 <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                <i v-else class="bi bi-lock-fill me-2"></i> Đặt Hàng Ngay
+                <span v-else><i class="bi bi-lock-fill me-2"></i> Xác nhận Đặt Hàng</span>
               </button>
+
+              
             </div>
           </div>
         </div>
+        
       </div>
     </form>
   </div>
@@ -134,7 +156,7 @@ const getUserEmail = () => {
 
 onMounted(async () => {
   if (cartStore.items.length === 0) {
-    alert("Giỏ hàng của bạn đang trống!");
+    alert("Giỏ hàng của quý khách đang trống!");
     router.push('/cart');
     return;
   }
@@ -206,7 +228,7 @@ const submitOrder = async () => {
     }
 
     cartStore.clearCart(); 
-    alert("Đặt hàng thành công! Mã đơn: #" + (orderId || 'xxx'));
+    alert("Đặt hàng thành công! Mã đơn của quý khách: #" + (orderId || 'xxx'));
     router.push('/orders'); 
     
   } catch (error) {
@@ -219,14 +241,57 @@ const submitOrder = async () => {
 </script>
 
 <style scoped>
-.input-group-text { background-color: #fff; border-right: none; color: #6c757d; }
-.form-control { border-left: none; }
-.form-control:focus { box-shadow: none; border-color: #ced4da; }
-.input-group:focus-within { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15); border-radius: 0.375rem; }
-.input-group:focus-within .form-control, .input-group:focus-within .input-group-text { border-color: #86b7fe; }
-.payment-option { border: 1px solid rgba(0,0,0,0.1); transition: all 0.2s; cursor: pointer; }
-.payment-option:hover { border-color: #0d6efd; background-color: #f8f9fa; }
-.payment-check:checked + .payment-label .payment-option { border-color: #0d6efd; background-color: rgba(13, 110, 253, 0.05); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1); }
+/* ==========================================
+   GIAO DIỆN LUXURY CHECKOUT
+========================================== */
+.checkout-page { font-family: 'Helvetica Neue', Arial, sans-serif; }
+.luxury-font { font-family: 'Montserrat', sans-serif; }
+.letter-spacing-1 { letter-spacing: 1px; }
+
+/* Colors & Basics */
+.gold-text { color: #B38728 !important; }
+.text-danger { color: #8b0000 !important; } /* Đỏ mận sang trọng */
+.border-gold-subtle { border: 1px solid #eaeaea !important; }
+.divider-gold { width: 60px; height: 3px; background: linear-gradient(to right, #B38728, #FBF5B7, #D4AF37); }
+
+/* Inputs (Giao hàng) */
+.custom-input-group { border: 1px solid #e0e0e0; border-radius: 2px; transition: all 0.3s ease; background: #fafafa; }
+.custom-input-group .input-group-text { background-color: transparent; border: none; color: #B38728; }
+.custom-input-group .form-control { border: none; background-color: transparent; box-shadow: none; padding-left: 0; font-size: 15px; }
+.custom-input-group:focus-within { border-color: #D4AF37; background: #fff; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+
+.custom-textarea { border: 1px solid #e0e0e0; border-radius: 2px; background: #fafafa; transition: all 0.3s; box-shadow: none; font-size: 15px; padding: 12px; }
+.custom-textarea:focus { border-color: #D4AF37; background: #fff; outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+
+/* Phương thức thanh toán */
 .payment-check { display: none; }
-.border-dashed { border-bottom-style: dashed !important; border-bottom-color: #dee2e6 !important; }
+.payment-option { border: 1px solid #e0e0e0; transition: all 0.3s ease; cursor: pointer; background: #fff; }
+.payment-option .icon-wrapper { color: #aaa; transition: 0.3s; }
+
+.payment-option:hover { border-color: #D4AF37; background-color: #fdfbf7; }
+.payment-option:hover .icon-wrapper { color: #D4AF37; }
+
+.payment-check:checked + .payment-label .payment-option { 
+  border-color: #D4AF37; 
+  background-color: #fdfbf7; 
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); 
+}
+.payment-check:checked + .payment-label .payment-option .icon-wrapper { color: #D4AF37; }
+
+/* Tóm tắt đơn hàng */
+.summary-card { background: #fdfbf7; } /* Màu nền kem sữa nhạt */
+.img-wrap { border: 1px solid #e0e0e0; border-radius: 2px; }
+.border-dashed { border-bottom: 1px dashed #dcdcdc !important; }
+
+/* Nút Submit */
+.btn-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #FBF5B7 50%, #B38728 100%);
+  color: #111 !important; border: 1px solid #D4AF37;
+  transition: all 0.4s ease;
+}
+.btn-gold:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FBF5B7 0%, #D4AF37 50%, #AA771C 100%);
+  transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+.btn-gold:disabled { opacity: 0.7; filter: grayscale(50%); cursor: not-allowed; }
 </style>
