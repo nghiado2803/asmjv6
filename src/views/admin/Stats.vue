@@ -1,165 +1,173 @@
 <template>
-  <div class="container-fluid p-4">
-    <h3 class="fw-bold mb-4 text-dark">Thống kê kinh doanh</h3>
+  <div class="admin-stats-page p-4 p-md-5">
+    
+    <div class="d-flex align-items-center mb-5">
+      <div class="title-accent me-3"></div>
+      <h3 class="luxury-font fw-bold mb-0 text-uppercase letter-spacing-1 text-dark">Báo cáo Kinh doanh</h3>
+    </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-5">
+      
       <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-primary text-white h-100" style="background: linear-gradient(45deg, #0d6efd, #0a58ca);">
-          <div class="card-body">
-            <h6 class="text-white-50 text-uppercase small fw-bold">Tổng doanh thu</h6>
-            <h3 class="fw-bold mt-2">{{ formatPrice(stats.totalRevenue) }}</h3>
-            <small class="text-white-50"><i class="bi bi-graph-up-arrow"></i> Tích lũy toàn thời gian</small>
+        <div class="card luxury-stat-card bg-dark-gradient text-white h-100 border-0 shadow-sm">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <h6 class="text-uppercase small fw-bold letter-spacing-1 text-gold-light mb-3">Tổng doanh thu</h6>
+            <h3 class="fw-bold luxury-font text-white mb-3">{{ formatPrice(stats.totalRevenue) }}</h3>
+            <small class="text-white-50 letter-spacing-1"><i class="bi bi-graph-up-arrow me-1"></i> Tích lũy toàn hệ thống</small>
           </div>
         </div>
       </div>
 
       <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
-          <div class="card-body">
-            <h6 class="text-muted text-uppercase small fw-bold">Đơn hàng thành công</h6>
-            <h3 class="fw-bold mt-2 text-dark">{{ stats.successfulOrders || 0 }}</h3>
-            <small class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã giao & Thanh toán</small>
+        <div class="card luxury-stat-card bg-white h-100 border-gold-subtle shadow-sm">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <h6 class="text-muted text-uppercase small fw-bold letter-spacing-1 mb-3">Giao dịch thành công</h6>
+            <h3 class="fw-bold text-dark luxury-font mb-3">{{ stats.successfulOrders || 0 }} <span class="fs-6 fw-normal text-muted">đơn</span></h3>
+            <small class="text-success fw-bold letter-spacing-1"><i class="bi bi-check2-all me-1"></i> Đã giao & Thanh toán</small>
           </div>
         </div>
       </div>
 
       <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
-          <div class="card-body">
-            <h6 class="text-muted text-uppercase small fw-bold">Tổng tồn kho</h6>
-            <h3 class="fw-bold mt-2 text-dark">{{ stats.totalStock || 0 }}</h3>
-            <small class="text-primary fw-bold"><i class="bi bi-box-seam-fill"></i> Sản phẩm sẵn sàng</small>
+        <div class="card luxury-stat-card bg-white h-100 border-gold-subtle shadow-sm">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <h6 class="text-muted text-uppercase small fw-bold letter-spacing-1 mb-3">Tổng tồn kho</h6>
+            <h3 class="fw-bold text-dark luxury-font mb-3">{{ stats.totalStock || 0 }} <span class="fs-6 fw-normal text-muted">sản phẩm</span></h3>
+            <small class="gold-text fw-bold letter-spacing-1"><i class="bi bi-box-seam me-1"></i> Sẵn sàng phục vụ</small>
           </div>
         </div>
       </div>
 
       <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
-          <div class="card-body">
-            <h6 class="text-muted text-uppercase small fw-bold">Khách hàng mới</h6>
-            <h3 class="fw-bold mt-2 text-dark">{{ stats.newCustomersToday || 0 }}</h3>
-            <small class="text-warning fw-bold"><i class="bi bi-person-plus-fill"></i> Đăng ký hôm nay</small>
+        <div class="card luxury-stat-card bg-white h-100 border-gold-subtle shadow-sm">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <h6 class="text-muted text-uppercase small fw-bold letter-spacing-1 mb-3">Khách hàng mới</h6>
+            <h3 class="fw-bold text-dark luxury-font mb-3">{{ stats.newCustomersToday || 0 }} <span class="fs-6 fw-normal text-muted">người</span></h3>
+            <small class="text-muted fw-bold letter-spacing-1"><i class="bi bi-person-plus me-1"></i> Đăng ký trong ngày</small>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-5">
+      
       <div class="col-md-8">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-          <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Biểu đồ doanh thu năm {{ currentYear }}</h6>
+        <div class="card border-gold-subtle shadow-sm rounded-1 h-100 bg-white">
+          <div class="card-header bg-transparent py-4 px-4 border-bottom border-gold-subtle">
+            <h6 class="fw-bold mb-0 text-uppercase letter-spacing-1 text-dark"><i class="bi bi-bar-chart-line-fill gold-text me-2 fs-5"></i>Biểu đồ doanh thu năm {{ currentYear }}</h6>
           </div>
-          <div class="card-body">
-            <div style="height: 350px;" v-if="!isLoading">
+          <div class="card-body p-4">
+            <div style="height: 380px;" v-if="!isLoading">
               <canvas id="revenueChart"></canvas>
             </div>
-            <div v-else class="d-flex justify-content-center align-items-center h-100">
-              <div class="spinner-border text-primary"></div>
+            <div v-else class="d-flex justify-content-center align-items-center h-100 flex-column text-muted">
+              <div class="spinner-border gold-text mb-3"></div>
+              <span class="text-uppercase letter-spacing-1 small fw-bold">Đang vẽ biểu đồ...</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-          <div class="card-header bg-white py-3 border-0">
-            <h6 class="fw-bold mb-0">Sản phẩm giá trị cao</h6>
+        <div class="card border-gold-subtle shadow-sm rounded-1 h-100 bg-white">
+          <div class="card-header bg-transparent py-4 px-4 border-bottom border-gold-subtle">
+            <h6 class="fw-bold mb-0 text-uppercase letter-spacing-1 text-dark"><i class="bi bi-award-fill gold-text me-2 fs-5"></i>Top giá trị cao nhất</h6>
           </div>
           
           <ul class="list-group list-group-flush" v-if="stats.topProducts && stats.topProducts.length > 0">
-            <li v-for="(p, index) in stats.topProducts" :key="p.id" class="list-group-item border-0 d-flex justify-content-between align-items-center py-3">
+            <li v-for="(p, index) in stats.topProducts" :key="p.id" class="list-group-item border-0 border-bottom border-dashed px-4 py-3 d-flex justify-content-between align-items-center table-row-hover">
               <div class="d-flex align-items-center">
-                <span class="badge rounded-circle me-3" 
-                      :class="index === 0 ? 'bg-warning' : (index === 1 ? 'bg-secondary' : (index === 2 ? 'bg-danger' : 'bg-light text-dark border'))" 
-                      style="width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                <span class="badge-rank me-3 shadow-sm d-flex align-items-center justify-content-center" 
+                      :class="index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : 'rank-other'))">
                   {{ index + 1 }}
                 </span>
                 <div>
-                  <span class="fw-bold d-block text-truncate" style="max-width: 150px;">{{ p.name }}</span>
-                  <small class="text-muted">{{ p.brand }}</small>
+                  <span class="fw-bold d-block text-truncate text-dark luxury-font" style="max-width: 140px; font-size: 15px;">{{ p.name }}</span>
+                  <small class="text-muted text-uppercase letter-spacing-1" style="font-size: 10px;">{{ p.brand }}</small>
                 </div>
               </div>
-              <span class="fw-bold text-primary small">{{ formatPrice(p.price) }}</span>
+              <span class="fw-bold gold-text small letter-spacing-1">{{ formatPrice(p.price) }}</span>
             </li>
           </ul>
 
-          <div v-else class="card-body text-center text-muted d-flex align-items-center justify-content-center" style="min-height: 200px;">
-            <p class="mb-0">Chưa có dữ liệu sản phẩm.</p>
+          <div v-else class="card-body text-center text-muted d-flex flex-column align-items-center justify-content-center fst-italic" style="min-height: 250px;">
+            <i class="bi bi-inbox display-4 opacity-25 mb-3"></i>
+            <p class="mb-0 small letter-spacing-1">Chưa có dữ liệu tuyệt tác.</p>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
       <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="card-header bg-white py-3 border-bottom">
-            <h6 class="fw-bold mb-0 text-success"><i class="bi bi-tags-fill me-2"></i>Thống kê theo Loại hàng</h6>
+        <div class="card border-gold-subtle shadow-sm rounded-1 overflow-hidden bg-white">
+          <div class="card-header bg-transparent py-4 px-4 border-bottom border-gold-subtle">
+            <h6 class="fw-bold mb-0 text-uppercase letter-spacing-1 text-dark"><i class="bi bi-tags gold-text me-2 fs-5"></i>Tỷ trọng Phân loại</h6>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light text-secondary small">
+            <table class="table luxury-table align-middle mb-0">
+              <thead>
                 <tr>
-                  <th class="ps-4">Tên loại hàng</th>
-                  <th>SL Bán</th>
-                  <th>Giá thấp nhất</th>
-                  <th>Giá cao nhất</th>
-                  <th>Giá trung bình</th>
-                  <th class="text-end pe-4">Tổng doanh thu</th>
+                  <th class="ps-4 text-uppercase letter-spacing-1">Bộ sưu tập</th>
+                  <th class="text-center text-uppercase letter-spacing-1">Số lượng bán</th>
+                  <th class="text-uppercase letter-spacing-1">Phân khúc thấp</th>
+                  <th class="text-uppercase letter-spacing-1">Phân khúc cao</th>
+                  <th class="text-uppercase letter-spacing-1">Mức giá TB</th>
+                  <th class="text-end pe-4 text-uppercase letter-spacing-1">Tổng sinh lời</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, index) in stats.categoryStats" :key="index">
-                  <td class="ps-4 fw-bold">{{ row[0] }}</td>
-                  <td>{{ row[2] }}</td>
-                  <td>{{ formatPrice(row[3]) }}</td>
-                  <td>{{ formatPrice(row[4]) }}</td>
-                  <td>{{ formatPrice(row[5]) }}</td>
-                  <td class="text-end pe-4 fw-bold text-success">{{ formatPrice(row[1]) }}</td>
+                <tr v-for="(row, index) in stats.categoryStats" :key="index" class="table-row-hover">
+                  <td class="ps-4 fw-bold text-dark luxury-font fs-6">{{ row[0] }}</td>
+                  <td class="text-center fw-bold">{{ row[2] }}</td>
+                  <td class="text-muted small">{{ formatPrice(row[3]) }}</td>
+                  <td class="text-muted small">{{ formatPrice(row[4]) }}</td>
+                  <td class="text-muted small">{{ formatPrice(row[5]) }}</td>
+                  <td class="text-end pe-4 fw-bold gold-text">{{ formatPrice(row[1]) }}</td>
                 </tr>
                 <tr v-if="!stats.categoryStats || stats.categoryStats.length === 0">
-                  <td colspan="6" class="text-center py-4 text-muted">Chưa có dữ liệu bán hàng.</td>
+                  <td colspan="6" class="text-center py-5 text-muted fst-italic">Hệ thống chưa ghi nhận dữ liệu bán hàng.</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="col-12 mb-5">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-trophy-fill me-2"></i>Top 10 Khách hàng VIP</h6>
-            <span class="badge bg-warning text-dark">Chi tiêu cao nhất</span>
+    <div class="row g-4 mb-5">
+      <div class="col-12">
+        <div class="card border-gold-subtle shadow-sm rounded-1 overflow-hidden bg-white">
+          <div class="card-header bg-transparent py-4 px-4 border-bottom border-gold-subtle d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-uppercase letter-spacing-1 text-dark"><i class="bi bi-gem gold-text me-2 fs-5"></i>Top 10 Đối tác VIP</h6>
+            <span class="badge-vip"><i class="bi bi-star-fill me-1"></i>Chi tiêu cao nhất</span>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light text-secondary small">
+            <table class="table luxury-table align-middle mb-0">
+              <thead>
                 <tr>
-                  <th class="ps-4">#</th>
-                  <th>Tên khách hàng</th>
-                  <th>Ngày mua đầu tiên</th>
-                  <th>Ngày mua gần nhất</th>
-                  <th class="text-end pe-4">Tổng tiền đã mua</th>
+                  <th class="ps-4 text-uppercase letter-spacing-1" style="width: 80px;">Hạng</th>
+                  <th class="text-uppercase letter-spacing-1">Tên khách hàng</th>
+                  <th class="text-uppercase letter-spacing-1">Khách từ</th>
+                  <th class="text-uppercase letter-spacing-1">Giao dịch cuối</th>
+                  <th class="text-end pe-4 text-uppercase letter-spacing-1">Lũy kế mua hàng</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, i) in stats.vipCustomers" :key="i">
+                <tr v-for="(row, i) in stats.vipCustomers" :key="i" class="table-row-hover">
                   <td class="ps-4">
-                    <span class="badge rounded-circle bg-light text-dark border"
-                          :class="i === 0 ? 'bg-warning border-warning' : (i === 1 ? 'bg-secondary text-white' : (i === 2 ? 'bg-danger text-white' : ''))"
-                          style="width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+                    <span class="badge-rank shadow-sm d-flex align-items-center justify-content-center mx-auto"
+                          :class="i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : 'rank-other'))">
                       {{ i + 1 }}
                     </span>
                   </td>
-                  <td class="fw-bold">{{ row[0] }}</td>
-                  <td>{{ formatDate(row[2]) }}</td>
-                  <td>{{ formatDate(row[3]) }}</td>
-                  <td class="text-end pe-4 fw-bold text-danger">{{ formatPrice(row[1]) }}</td>
+                  <td class="fw-bold text-dark luxury-font fs-6">{{ row[0] }}</td>
+                  <td class="text-muted small letter-spacing-1">{{ formatDate(row[2]) }}</td>
+                  <td class="text-muted small letter-spacing-1">{{ formatDate(row[3]) }}</td>
+                  <td class="text-end pe-4 fw-bold gold-text fs-5 luxury-font">{{ formatPrice(row[1]) }}</td>
                 </tr>
                 <tr v-if="!stats.vipCustomers || stats.vipCustomers.length === 0">
-                  <td colspan="5" class="text-center py-4 text-muted">Chưa có khách hàng VIP.</td>
+                  <td colspan="5" class="text-center py-5 text-muted fst-italic">Hệ thống chưa ghi nhận khách hàng VIP.</td>
                 </tr>
               </tbody>
             </table>
@@ -167,6 +175,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -179,7 +188,7 @@ const isLoading = ref(true);
 const currentYear = new Date().getFullYear();
 
 // ==========================================
-// ĐỊNH NGHĨA INTERFACE (FIX LỖI TS ĐỎ LÒM TRONG VS CODE)
+// INTERFACES
 // ==========================================
 interface TopProduct {
   id: number;
@@ -200,7 +209,6 @@ interface StatsData {
   vipCustomers: any[];
 }
 
-// Khởi tạo state chuẩn Type
 const stats = ref<StatsData>({
   totalRevenue: 0,
   successfulOrders: 0,
@@ -213,7 +221,7 @@ const stats = ref<StatsData>({
 });
 
 // ==========================================
-// GỌI API & FORMATTER
+// API & FORMATTER
 // ==========================================
 const fetchStats = async () => {
   isLoading.value = true;
@@ -244,7 +252,7 @@ const formatDate = (dateString: string | null) => {
 };
 
 // ==========================================
-// VẼ BIỂU ĐỒ (CHART.JS)
+// CHART.JS (LUXURY STYLE)
 // ==========================================
 const initChart = (chartData: number[]) => {
   const ctx = document.getElementById('revenueChart') as HTMLCanvasElement;
@@ -257,10 +265,12 @@ const initChart = (chartData: number[]) => {
       datasets: [{
         label: 'Doanh thu (VNĐ)',
         data: chartData,
-        backgroundColor: 'rgba(13, 110, 253, 0.7)',
-        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(212, 175, 55, 0.75)', // Màu Vàng Gold (Cột trong biểu đồ)
+        hoverBackgroundColor: 'rgba(212, 175, 55, 1)',
+        borderColor: '#B38728',
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 2, // Hơi vuông một chút cho sang
+        barPercentage: 0.6,
       }]
     },
     options: {
@@ -269,23 +279,40 @@ const initChart = (chartData: number[]) => {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: 'rgba(26, 26, 26, 0.95)',
+          titleFont: { family: "'Helvetica Neue', Arial, sans-serif", size: 13, weight: 'bold' },
+          bodyFont: { family: "'Helvetica Neue', Arial, sans-serif", size: 14 },
+          padding: 12,
+          borderColor: '#D4AF37',
+          borderWidth: 1,
           callbacks: {
             label: (context) => {
-              let label = context.dataset.label || '';
-              if (label) label += ': ';
               if (context.parsed.y !== null) {
-                label += new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
+                return ' ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
               }
-              return label;
+              return '';
             }
           }
         }
       },
       scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "'Helvetica Neue', Arial, sans-serif", weight: 'bold' }, color: '#888' }
+        },
         y: {
           beginAtZero: true,
+          grid: { color: '#eaeaea', tickLength: 0 },
+          border: { display: false },
           ticks: {
-            callback: (value) => new Intl.NumberFormat('vi-VN').format(Number(value)) + ' ₫'
+            font: { family: "'Helvetica Neue', Arial, sans-serif" },
+            color: '#aaa',
+            padding: 10,
+            callback: (value) => {
+              if (Number(value) >= 1000000000) return (Number(value) / 1000000000) + ' Tỷ';
+              if (Number(value) >= 1000000) return (Number(value) / 1000000) + ' Tr';
+              return new Intl.NumberFormat('vi-VN').format(Number(value));
+            }
           }
         }
       }
@@ -295,8 +322,6 @@ const initChart = (chartData: number[]) => {
 
 onMounted(async () => {
   await fetchStats();
-  
-  // Phải dùng nextTick để chắc chắn thẻ <canvas> đã có trên giao diện rồi mới vẽ
   await nextTick();
   if (stats.value.chartData && stats.value.chartData.length > 0) {
     initChart(stats.value.chartData);
@@ -305,5 +330,58 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Code HTML/Bootstrap của mày xịn quá rồi nên không cần chế thêm CSS */
+/* ==========================================
+   GIAO DIỆN LUXURY ADMIN STATS
+========================================== */
+.admin-stats-page { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; min-height: 100vh; }
+.luxury-font { font-family: 'Montserrat', sans-serif;}
+.letter-spacing-1 { letter-spacing: 1px; }
+
+/* Colors & Basics */
+.gold-text { color: #B38728 !important; }
+.text-gold-light { color: #FBF5B7 !important; }
+.border-gold-subtle { border-color: #eaeaea !important; }
+.border-dashed { border-bottom: 1px dashed #eaeaea !important; }
+.title-accent { width: 4px; height: 28px; background: linear-gradient(to bottom, #D4AF37, #B38728); }
+
+/* Thẻ Thống kê (Stat Cards) */
+.luxury-stat-card {
+  border-radius: 2px; 
+  transition: all 0.4s ease;
+}
+.luxury-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06) !important;
+  border-color: #D4AF37 !important;
+}
+.bg-dark-gradient {
+  background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+}
+
+/* Bảng Dữ liệu (Table) */
+.luxury-table { margin-bottom: 0; }
+.luxury-table thead { background-color: #fafafa; border-bottom: 1px solid #eaeaea; }
+.luxury-table th { 
+  font-size: 10px; color: #888; font-weight: 700; 
+  padding: 18px 10px; border-bottom: none;
+}
+.luxury-table td { padding: 18px 10px; color: #444; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+.table-row-hover { transition: all 0.2s ease; background-color: #fff; }
+.table-row-hover:hover { background-color: #fdfbf7; }
+
+/* Badges VIP / Rank */
+.badge-vip {
+  background: #fdfbf7; color: #B38728; border: 1px solid #D4AF37;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  padding: 5px 12px; border-radius: 2px;
+}
+
+.badge-rank {
+  width: 28px; height: 28px; border-radius: 2px;
+  font-weight: 800; font-size: 12px; font-family: 'Montserrat', sans-serif;
+}
+.rank-1 { background: linear-gradient(135deg, #D4AF37, #B38728); color: #fff; border: 1px solid #AA771C; }
+.rank-2 { background: linear-gradient(135deg, #e0e0e0, #999); color: #fff; border: 1px solid #888; }
+.rank-3 { background: linear-gradient(135deg, #cd7f32, #a65e2e); color: #fff; border: 1px solid #8B4513; }
+.rank-other { background: #fafafa; color: #555; border: 1px solid #eaeaea; }
 </style>
