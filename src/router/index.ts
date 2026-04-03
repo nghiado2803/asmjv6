@@ -45,6 +45,12 @@ const router = createRouter({
       component: () => import('../views/client/Register.vue')
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      // ĐÃ FIX: Trỏ đúng vào thư mục client
+      component: () => import('../views/client/ForgotPassword.vue') 
+    },
+    {
       path: '/profile',
       name: 'profile',
       component: () => import('../views/client/Profile.vue')
@@ -61,8 +67,7 @@ const router = createRouter({
     },
     { 
       path: '/order/:id', 
-      name: 'OrderDetail', 
-      // ĐỂ Ý CHỖ NÀY: Tao mặc định mày để file trong views/client/OrderDetail.vue nhé
+      name: 'order-detail', 
       component: () => import('../views/client/OrderDetail.vue') 
     },
 
@@ -114,15 +119,16 @@ const router = createRouter({
 router.beforeEach((to) => {
   const role = localStorage.getItem('role') || '';
   const isAdmin = role.includes('ADMIN');
+  const isAuthenticated = !!localStorage.getItem('user');
   
   // Nếu cố vào trang admin mà không có quyền admin
   if (to.path.startsWith('/admin') && !isAdmin) {
-    return '/login'; // Trả về đường dẫn thay vì gọi next()
+    return '/login'; 
   }
   
-  // Nếu vào trang checkout hoặc orders mà chưa login (check token hoặc user)
-  const isAuthenticated = !!localStorage.getItem('user');
-  if ((to.path === '/checkout' || to.path === '/orders') && !isAuthenticated) {
+  // Bảo vệ các trang nhạy cảm của user: checkout, orders, order detail, profile
+  const authRequiredRoutes = ['/checkout', '/orders', '/profile', '/change-password'];
+  if ((authRequiredRoutes.includes(to.path) || to.path.startsWith('/order/')) && !isAuthenticated) {
     return '/login';
   }
 });
