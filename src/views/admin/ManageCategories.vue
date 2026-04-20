@@ -109,6 +109,16 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import api from '@/api/index';
+import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
+
+// CẤU HÌNH POPUP LUXURY
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
+    cancelButton: 'btn btn-outline-secondary rounded-1 fw-bold px-4 py-2 ms-2 text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
 
 // Interface chuẩn
 interface Category {
@@ -175,7 +185,17 @@ const saveCategory = async () => {
 };
 
 const handleDelete = async (id: number) => {
-  if (confirm('Cảnh báo: Bạn có chắc chắn muốn xóa danh mục này?')) {
+  // SỬA ĐỔI DUY NHẤT: Thay thế confirm() mặc định bằng SweetAlert2
+  const result = await LuxuryAlert.fire({
+    icon: 'warning',
+    title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Cảnh báo</h4>',
+    text: 'Bạn có chắc chắn muốn xóa danh mục này?',
+    showCancelButton: true,
+    confirmButtonText: 'Xác nhận xóa',
+    cancelButtonText: 'Hủy bỏ'
+  });
+
+  if (result.isConfirmed) {
     errorMessage.value = '';
     successMessage.value = '';
     try {
