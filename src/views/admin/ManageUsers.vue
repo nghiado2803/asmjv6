@@ -33,7 +33,12 @@
                   </div>
                   <div class="ms-3">
                     <h6 class="fw-bold mb-1 text-dark luxury-font fs-6">{{ user.fullName }}</h6>
-                    <small class="text-muted text-uppercase letter-spacing-1" style="font-size: 11px;">ID: <strong class="text-dark">#{{ user.id }}</strong></small>
+                    <div class="d-flex align-items-center gap-2">
+                      <small class="text-muted text-uppercase letter-spacing-1" style="font-size: 11px;">ID: <strong class="text-dark">#{{ user.id }}</strong></small>
+                      <span v-if="isGoogleAccount(user)" class="badge bg-light text-danger border border-danger-subtle ms-1" style="font-size: 9px; letter-spacing: 0;">
+                        <i class="bi bi-google me-1"></i>GMAIL
+                      </span>
+                    </div>
                   </div>
                 </div>
               </td>
@@ -46,8 +51,8 @@
               </td>
               
               <td class="py-3">
-                <span :class="user.role === 'ROLE_ADMIN' || user.role === 'ADMIN' ? 'role-badge badge-admin' : 'role-badge badge-user'">
-                  {{ user.role === 'ROLE_ADMIN' || user.role === 'ADMIN' ? 'Quản Trị' : 'Thành Viên' }}
+                <span :class="isAdmin(user) ? 'role-badge badge-admin' : 'role-badge badge-user'">
+                  {{ isAdmin(user) ? 'Quản Trị' : 'Thành Viên' }}
                 </span>
               </td>
               
@@ -70,10 +75,10 @@
                           class="btn btn-sm action-btn border-gold-subtle" 
                           :class="[
                             user.enabled ? 'btn-light text-danger hover-danger' : 'btn-dark text-white',
-                            { 'opacity-50 cursor-not-allowed': user.role === 'ROLE_ADMIN' || user.role === 'ADMIN' }
+                            { 'opacity-50 cursor-not-allowed': isAdmin(user) }
                           ]" 
-                          :disabled="user.role === 'ROLE_ADMIN' || user.role === 'ADMIN'"
-                          :title="(user.role === 'ROLE_ADMIN' || user.role === 'ADMIN') ? 'Không thể khóa Quản trị viên' : (user.enabled ? 'Khóa tài khoản' : 'Mở khóa')">
+                          :disabled="isAdmin(user)"
+                          :title="isAdmin(user) ? 'Không thể khóa Quản trị viên' : (user.enabled ? 'Khóa tài khoản' : 'Mở khóa')">
                     <i :class="user.enabled ? 'bi bi-lock-fill' : 'bi bi-unlock-fill'"></i>
                   </button>
                 </div>
@@ -115,16 +120,8 @@
                 
                 <div class="col-md-6">
                   <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Định danh Email</label>
-                  <input type="email" v-model="form.email" class="form-control custom-input" placeholder="email@domain.com" required>
-                </div>
-                
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1 d-flex justify-content-between">
-                    Mật khẩu bảo mật <span class="text-danger fst-italic fw-normal text-lowercase" style="letter-spacing: 0; font-size: 10px;">*Bỏ trống nếu giữ nguyên</span>
-                  </label>
-                  <input type="password" v-model="form.password" class="form-control custom-input" placeholder="Nhập mật khẩu (Nếu có)...">
-                </div>
-                
+                  <input type="email" v-model="form.email" class="form-control custom-input" placeholder="email@domain.com" :readonly="form.id !== null" required>
+                </div>               
                 <div class="col-md-12">
                   <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Địa chỉ liên hệ</label>
                   <input type="text" v-model="form.address" class="form-control custom-input" placeholder="Số nhà, đường, quận/huyện...">
@@ -134,17 +131,17 @@
                   <div class="row g-4">
                     <div class="col-md-6">
                       <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Phân quyền hệ thống</label>
-                      <select v-model="form.role" class="form-select custom-input fw-bold" :disabled="(form.role === 'ROLE_ADMIN' || form.role === 'ADMIN') && form.id !== null">
+                      <select v-model="form.role" class="form-select custom-input fw-bold" :disabled="isAdmin(form) && form.id !== null">
                         <option value="ROLE_USER">Khách hàng / Thành viên (USER)</option>
                         <option value="ROLE_ADMIN">Quản trị viên hệ thống (ADMIN)</option>
                       </select>
-                      <small v-if="(form.role === 'ROLE_ADMIN' || form.role === 'ADMIN') && form.id !== null" class="text-danger d-block mt-1 fst-italic" style="font-size: 11px;">* Không thể hạ cấp Quản trị viên hiện tại.</small>
+                      <small v-if="isAdmin(form) && form.id !== null" class="text-danger d-block mt-1 fst-italic" style="font-size: 11px;">* Không thể hạ cấp Quản trị viên hiện tại.</small>
                     </div>
                     
                     <div class="col-md-6 d-flex flex-column justify-content-center">
                       <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Trạng thái hồ sơ</label>
                       <div class="form-check form-switch mt-1">
-                        <input class="form-check-input custom-switch" type="checkbox" v-model="form.enabled" id="u_enabled" :disabled="form.role === 'ROLE_ADMIN' || form.role === 'ADMIN'">
+                        <input class="form-check-input custom-switch" type="checkbox" v-model="form.enabled" id="u_enabled" :disabled="isAdmin(form)">
                         <label class="form-check-label fw-bold ms-2" for="u_enabled" :class="form.enabled ? 'text-success' : 'text-danger'">
                           {{ form.enabled ? 'Cho phép hoạt động' : 'Tạm khóa truy cập' }}
                         </label>
@@ -174,7 +171,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import api from '@/api/index';
+import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
 
+// CẤU HÌNH POPUP LUXURY
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
+    cancelButton: 'btn btn-outline-secondary rounded-1 fw-bold px-4 py-2 ms-2 text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
+
+// Định nghĩa Interface chuẩn
 interface User {
   id: number | null;
   fullName: string;
@@ -182,10 +190,11 @@ interface User {
   phoneNumber: string;
   password?: string;
   address: string;
-  role: 'ROLE_USER' | 'ROLE_ADMIN' | 'ADMIN';
+  role: string;
   enabled: boolean;
 }
 
+// Biến trạng thái
 const users = ref<User[]>([]);
 const showModal = ref(false);
 const isLoading = ref(false);
@@ -201,13 +210,23 @@ const form = reactive<User>({
   enabled: true
 });
 
+// Hàm tiện ích: Lấy chữ cái đầu làm Avatar
 const getInitial = (name: string | null | undefined) => {
-  if (name && name.length > 0) {
-    return name.charAt(0).toUpperCase();
-  }
+  if (name && name.length > 0) return name.charAt(0).toUpperCase();
   return 'U';
 };
 
+// Hàm kiểm tra: Có phải Admin không?
+const isAdmin = (user: User) => {
+  return user.role === 'ROLE_ADMIN' || user.role === 'ADMIN';
+};
+
+// Hàm kiểm tra: Có phải tài khoản Gmail không? (Dựa vào đuôi email và không có mật khẩu)
+const isGoogleAccount = (user: User) => {
+  return user.email.endsWith('@gmail.com') && !user.password;
+};
+
+// Fetch danh sách User từ API
 const fetchUsers = async () => {
   try {
     const res = await api.get<User[]>('/admin/users');
@@ -219,6 +238,7 @@ const fetchUsers = async () => {
 
 onMounted(fetchUsers);
 
+// Mở Modal (truyền user nếu là cập nhật, truyền null nếu thêm mới)
 const openModal = (user: User | null = null) => {
   if (user) {
     Object.assign(form, user, { password: '' });
@@ -228,53 +248,79 @@ const openModal = (user: User | null = null) => {
   showModal.value = true;
 };
 
+// Xử lý Lưu dữ liệu
 const handleSave = async () => {
-  // 1. Kiểm tra nhanh trước khi gửi lên Backend
   if (!form.fullName || !form.email) {
-    alert("Vui lòng điền đầy đủ Họ tên và Email!");
+    // SỬA ALERT 1
+    LuxuryAlert.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng điền đầy đủ Họ tên và Email!' });
     return;
   }
 
-  // 2. Nếu là THÊM MỚI (id === null), bắt buộc hoặc nhắc nhở nhập mật khẩu
-  if (!form.id && (!form.password || form.password.trim().length < 6)) {
-    const confirmDefault = confirm("Mật khẩu đang trống hoặc quá ngắn. Hệ thống sẽ gán mật khẩu mặc định là '123456'. Tiếp tục?");
-    if (!confirmDefault) return;
-    form.password = '123456'; // Gán tạm để gửi lên
+  // Nếu là THÊM MỚI (id === null) và không phải thêm tài khoản Google, bắt buộc xử lý mật khẩu
+  if (!form.id && (!form.password || form.password.trim().length < 6) && !isGoogleAccount(form)) {
+    // SỬA CONFIRM 1
+    const result = await LuxuryAlert.fire({
+      icon: 'question',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác nhận bảo mật</h4>',
+      text: "Mật khẩu đang trống hoặc quá ngắn. Hệ thống sẽ gán mật khẩu mặc định là '123456'. Tiếp tục?",
+      showCancelButton: true,
+      confirmButtonText: 'Tiếp tục',
+      cancelButtonText: 'Hủy bỏ'
+    });
+    if (!result.isConfirmed) return;
+    form.password = '123456';
   }
 
   isLoading.value = true;
   try {
-    // 3. Gửi dữ liệu
     await api.post('/admin/users/save', form);
     
-    // 4. Thành công: Đóng modal và tải lại danh sách
     showModal.value = false;
-    await fetchUsers();
+    await fetchUsers(); // Tải lại danh sách
+    form.password = ''; // Xóa pass rác trong form
     
-    // Reset lại mật khẩu trong form để lần sau mở ra không bị dính pass cũ
-    form.password = ''; 
-    
+    // Thêm Toast báo lưu thành công
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Lưu hồ sơ thành công!', showConfirmButton: false, timer: 2000 });
   } catch (e: any) {
-    // Hiển thị lỗi chi tiết từ Backend nếu có
     const msg = e.response?.data?.message || "Lỗi hệ thống khi lưu hồ sơ!";
-    alert(msg);
+    // SỬA ALERT 2
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: msg });
   } finally {
     isLoading.value = false;
   }
 };
 
+// Xử lý Cập nhật trạng thái Khóa / Mở khóa
 const toggleStatus = async (user: User) => {
-  if (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN') {
-    alert("Cảnh báo bảo mật: Tuyệt đối không được phép khóa tài khoản Quản trị viên!");
+  if (isAdmin(user)) {
+    // SỬA ALERT 3
+    LuxuryAlert.fire({ icon: 'error', title: 'Cảnh báo bảo mật', text: 'Tuyệt đối không được phép khóa tài khoản Quản trị viên!' });
     return;
   }
 
-  if (confirm(`Xác nhận thay đổi trạng thái truy cập của hồ sơ này?`)) {
+  const actionText = user.enabled ? 'KHÓA TRUY CẬP' : 'MỞ KHÓA';
+  const actionColor = user.enabled ? '#cc0000' : '#1a661a';
+
+  // SỬA CONFIRM 2
+  const result = await LuxuryAlert.fire({
+    icon: 'warning',
+    title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác nhận thao tác</h4>',
+    html: `Xác nhận <strong style="color: ${actionColor};">${actionText}</strong> đối với tài khoản <b>${user.email}</b>?`,
+    showCancelButton: true,
+    confirmButtonText: 'Đồng ý',
+    cancelButtonText: 'Hủy bỏ'
+  });
+
+  if (result.isConfirmed) {
     try {
+      // Gửi request lên Backend để đảo trạng thái (Backend tự đổi enabled = !enabled)
       await api.get(`/admin/users/toggle-status/${user.id}`);
       await fetchUsers();
+      // Toast báo thành công
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công!', showConfirmButton: false, timer: 2000 });
     } catch (e) {
-      alert("Lỗi thao tác!");
+      // SỬA ALERT 4
+      LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi thao tác khi cập nhật trạng thái!' });
     }
   }
 };
@@ -282,7 +328,7 @@ const toggleStatus = async (user: User) => {
 
 <style scoped>
 /* ==========================================
-   GIAO DIỆN LUXURY ADMIN USERS
+   GIAO DIỆN LUXURY ADMIN USERS (Giữ nguyên)
 ========================================== */
 .admin-users-page { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa; min-height: 100vh; }
 .luxury-font { font-family: 'Montserrat', sans-serif; }
@@ -310,7 +356,7 @@ const toggleStatus = async (user: User) => {
   background: linear-gradient(135deg, #111, #333);
   color: #D4AF37;
   border: 1px solid #D4AF37;
-  border-radius: 2px; /* Avatar vuông góc bo nhẹ chuẩn Luxury */
+  border-radius: 2px;
   font-size: 18px;
   font-weight: 800;
   font-family: 'Montserrat', sans-serif;
@@ -345,7 +391,7 @@ const toggleStatus = async (user: User) => {
   transition: all 0.3s; box-shadow: none; color: #333;
 }
 .custom-input:focus { border-color: #D4AF37; background: #fff; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); outline: none; }
-.custom-input:disabled { background: #f0f0f0; color: #888; border-color: #eee; cursor: not-allowed; }
+.custom-input:disabled, .custom-input[readonly] { background: #f0f0f0; color: #888; border-color: #eee; cursor: not-allowed; }
 
 /* Toggle Switch (Nút gạt trạng thái) */
 .custom-switch { width: 3em !important; height: 1.5em !important; cursor: pointer; }
