@@ -6,7 +6,7 @@
         <i class="bi bi-headset gold-text me-2 fs-4"></i>Trung tâm CSKH VIP
       </h5>
       <span class="status-badge status-active shadow-sm">
-        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Đang trực tuyến
+        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>
       </span>
     </div>
 
@@ -53,7 +53,7 @@
           </div>
           <div>
             <h6 class="mb-1 fw-bold text-dark luxury-font fs-5">{{ activeSession.userName }}</h6>
-            <small class="text-success fw-bold text-uppercase letter-spacing-1" style="font-size: 10px;"><i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: middle;"></i> Đang hoạt động</small>
+            <small class="text-success fw-bold text-uppercase letter-spacing-1" style="font-size: 10px;"><i class="bi bi-circle-fill me-1" style="font-size: 6px; vertical-align: middle;"></i></small>
           </div>
         </div>
         
@@ -82,7 +82,7 @@
                 </div>
               </a>
 
-              <small class="text-muted mt-2 letter-spacing-1" style="font-size: 10px;">{{ formatTime(msg.createdAt) }}{{ msg.isAdmin ? ' • Đã xem' : '' }}</small>
+              <small class="text-muted mt-2 letter-spacing-1" style="font-size: 10px;">{{ formatTime(msg.createdAt) }}</small>
             </div>
           </div>
         </div>
@@ -149,6 +149,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import api from '@/api/index';
+import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
+
+// CẤU HÌNH POPUP LUXURY
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
 
 const sessions = ref<any[]>([]);
 const activeSession = ref<any>(null);
@@ -208,7 +217,12 @@ const cancelImage = () => {
 };
 
 const sendMessage = async () => {
-  if (!activeSession.value) return alert("Vui lòng chọn khách hàng cần tư vấn trước!");
+  // SỬA ALERT 1
+  if (!activeSession.value) {
+    LuxuryAlert.fire({ icon: 'warning', title: 'Cảnh báo', text: 'Vui lòng chọn khách hàng cần tư vấn trước!' });
+    return;
+  }
+  
   if (!newMessage.value.trim() && !imageFile.value) return;
 
   let sent = false;
@@ -221,7 +235,10 @@ const sendMessage = async () => {
       await api.post('/admin/chat/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       cancelImage();
       sent = true;
-    } catch (e) { alert("Lỗi gửi ảnh!"); }
+    } catch (e) { 
+      // SỬA ALERT 2
+      LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi gửi ảnh!' }); 
+    }
   }
 
   if (newMessage.value.trim()) {
@@ -234,7 +251,10 @@ const sendMessage = async () => {
       });
       newMessage.value = '';
       sent = true;
-    } catch (e) { alert("Lỗi gửi tin nhắn!"); }
+    } catch (e) { 
+      // SỬA ALERT 3
+      LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi gửi tin nhắn!' }); 
+    }
   }
 
   if (sent) {
@@ -263,7 +283,8 @@ const sendProduct = async (product: any) => {
     fetchSessions();
   } catch (e) { 
     console.error("Lỗi 400:", e);
-    alert("Lỗi gửi thẻ sản phẩm! Vui lòng kiểm tra lại kết nối."); 
+    // SỬA ALERT 4
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi gửi thẻ sản phẩm! Vui lòng kiểm tra lại kết nối.' }); 
   }
 };
 
