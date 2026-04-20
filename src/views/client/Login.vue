@@ -8,12 +8,6 @@
         <div class="divider-gold mx-auto mt-2 mb-3"></div>
         <p class="login-subtitle letter-spacing-1 small">Đăng nhập để khám phá đặc quyền của bạn</p>
       </div>
-
-      <div v-if="errorMsg" class="alert custom-alert-danger mb-4 rounded-1 d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i> 
-        <span class="small fw-bold letter-spacing-1 text-uppercase">{{ errorMsg }}</span>
-      </div>
-
       <button type="button" class="btn-google mb-4" @click="handleGoogleLogin">
         <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google" class="google-icon"/>
         <span class="fw-bold letter-spacing-1 small text-uppercase">Tiếp tục với Google</span>
@@ -66,18 +60,43 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { reactive, ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import api from '@/api/index'; 
+import Swal from 'sweetalert2'; // Thêm import SweetAlert2
 
 const router = useRouter();
+const route = useRoute();
+
 const form = reactive({ email: '', password: '', remember: false });
-const errorMsg = ref('');
 const isLoading = ref(false);
 const showPassword = ref(false);
 
+// Cấu hình popup SweetAlert2 để ăn theo giao diện Luxury của bạn
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    // Tái sử dụng class btn-gold của bạn cho nút xác nhận
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false // Tắt style mặc định của Swal để dùng CSS của mình
+});
+
+// Xử lý khi trang vừa load xong (bắt lỗi từ luồng Google Login)
+onMounted(() => {
+  if (route.query.error === 'locked') {
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h3 class="luxury-font fw-bold mb-0 text-dark">Từ Chối Truy Cập</h3>',
+      html: '<p class="text-muted">Tài khoản của bạn đã bị vô hiệu hóa bởi Quản trị viên. Vui lòng liên hệ bộ phận hỗ trợ!</p>',
+      confirmButtonText: 'Đã hiểu'
+    });
+    
+    // Xóa query params trên URL cho sạch đẹp
+    router.replace({ path: '/login', query: {} });
+  }
+});
+
 const handleLogin = async () => {
-  errorMsg.value = '';
   isLoading.value = true;
 
   try {
@@ -86,7 +105,8 @@ const handleLogin = async () => {
       password: form.password
     });
 
-    console.log("Đăng nhập thành công:", res.data);
+    // Nếu cần thông báo đăng nhập thành công, bạn có thể dùng Toast ở đây
+    // (Thường đăng nhập thì chuyển trang luôn nên có thể bỏ qua)
 
     localStorage.setItem('token', res.data.token);
     
@@ -101,10 +121,22 @@ const handleLogin = async () => {
 
   } catch (error: any) {
     console.error("Lỗi đăng nhập:", error);
+    
+    // Bắn thông báo lỗi bằng SweetAlert2 thay vì dùng text thông thường
     if (error.response && error.response.status === 401) {
-      errorMsg.value = "Sai email hoặc mật khẩu. Vui lòng thử lại!";
+      LuxuryAlert.fire({
+        icon: 'warning',
+        title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Đăng Nhập Thất Bại</h4>',
+        text: 'Sai email hoặc mật khẩu bảo mật. Vui lòng kiểm tra lại!',
+        confirmButtonText: 'Thử lại'
+      });
     } else {
-      errorMsg.value = "Không thể kết nối đến máy chủ.";
+      LuxuryAlert.fire({
+        icon: 'error',
+        title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Lỗi Kết Nối</h4>',
+        text: 'Hệ thống máy chủ đang bận hoặc không phản hồi. Vui lòng thử lại sau!',
+        confirmButtonText: 'Đóng'
+      });
     }
   } finally {
     isLoading.value = false;
