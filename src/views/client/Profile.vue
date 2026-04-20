@@ -46,15 +46,6 @@
               </div>
             </div>
 
-            <div v-if="successMsg" class="alert custom-alert-success border-0 rounded-1 mb-4 d-flex align-items-center">
-              <i class="bi bi-check-circle-fill fs-5 me-3"></i> 
-              <span class="fw-bold letter-spacing-1 small text-uppercase">{{ successMsg }}</span>
-            </div>
-            <div v-if="errorMsg" class="alert custom-alert-danger border-0 rounded-1 mb-4 d-flex align-items-center">
-              <i class="bi bi-exclamation-triangle-fill fs-5 me-3"></i> 
-              <span class="fw-bold letter-spacing-1 small text-uppercase">{{ errorMsg }}</span>
-            </div>
-
             <div v-if="isLoading && !user.email" class="text-center py-5">
               <div class="spinner-border gold-text" role="status"></div>
               <p class="mt-3 text-muted fw-bold text-uppercase small letter-spacing-1">Đang tải hồ sơ...</p>
@@ -116,10 +107,9 @@
 import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const router = useRouter();
-const successMsg = ref('');
-const errorMsg = ref('');
 const isLoading = ref(true);
 
 const user = reactive({
@@ -128,6 +118,15 @@ const user = reactive({
   phoneNumber: '',
   address: '',
   role: ''
+});
+
+// Cấu hình Swal theo chuẩn Luxury
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
+    cancelButton: 'btn btn-outline-secondary rounded-1 fw-bold px-4 py-2 ms-2 text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
 });
 
 // Lấy email từ LocalStorage
@@ -145,7 +144,14 @@ const fetchProfile = async () => {
   const emailParam = getUserEmail();
   
   if (!emailParam) {
-    errorMsg.value = "Chưa có thông tin đăng nhập!";
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Hết phiên đăng nhập</h4>',
+      text: 'Chưa có thông tin đăng nhập! Vui lòng đăng nhập lại.',
+      confirmButtonText: 'Đăng nhập ngay'
+    }).then(() => {
+      router.push('/login');
+    });
     isLoading.value = false;
     return;
   }
@@ -161,7 +167,12 @@ const fetchProfile = async () => {
     user.role = data.role || 'ROLE_USER';
   } catch (error) {
     console.error("Lỗi khi tải profile:", error);
-    errorMsg.value = "Không thể tải thông tin hồ sơ!";
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Lỗi kết nối</h4>',
+      text: 'Không thể tải thông tin hồ sơ!',
+      confirmButtonText: 'Đóng'
+    });
   } finally {
     isLoading.value = false;
   }
@@ -171,6 +182,18 @@ const fetchProfile = async () => {
 const updateProfile = async () => {
   isLoading.value = true;
   const emailParam = getUserEmail();
+
+  if (!emailParam) {
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Lỗi phiên làm việc</h4>',
+      text: 'Vui lòng đăng nhập lại để tiếp tục.',
+      confirmButtonText: 'Đăng nhập'
+    }).then(() => router.push('/login'));
+    isLoading.value = false;
+    return;
+  }
+
   try {
     const payload = {
       fullName: user.fullName,
@@ -180,23 +203,53 @@ const updateProfile = async () => {
 
     await api.post(`/profile/update?email=${encodeURIComponent(emailParam)}`, payload);
     
-    successMsg.value = 'Cập nhật hồ sơ thành công!';
-    errorMsg.value = '';
-    setTimeout(() => successMsg.value = '', 4000);
+    // Thành công: Hiển thị Toast mượt mà ở góc trên bên phải
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Cập nhật hồ sơ thành công!',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+    
   } catch (error) {
     console.error("Lỗi khi cập nhật profile:", error);
-    errorMsg.value = "Đã xảy ra lỗi. Vui lòng thử lại!";
-    successMsg.value = '';
+    const backendError = error.response?.data?.error || 'Đã xảy ra lỗi. Vui lòng thử lại!';
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Cập nhật thất bại</h4>',
+      text: backendError,
+      confirmButtonText: 'Đóng'
+    });
   } finally {
     isLoading.value = false;
   }
 };
 
-const handleLogout = () => { 
-  if(confirm('Quý khách có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+const handleLogout = async () => { 
+  // Thay thế confirm mặc định bằng hộp thoại SweetAlert2
+  const result = await LuxuryAlert.fire({
+    title: '<h3 class="luxury-font fw-bold mb-0 text-dark">Xác nhận đăng xuất</h3>',
+    text: 'Quý khách có chắc chắn muốn đăng xuất khỏi hệ thống?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Đăng xuất',
+    cancelButtonText: 'Hủy bỏ'
+  });
+
+  if (result.isConfirmed) {
     localStorage.removeItem('user');
     localStorage.removeItem('email');
     localStorage.removeItem('token');
+    
+    // Toast thông báo nhỏ báo hiệu đã out thành công
+    Swal.fire({
+      toast: true, position: 'top-end', icon: 'info',
+      title: 'Đã đăng xuất an toàn!', showConfirmButton: false, timer: 1500
+    });
+
     router.push('/login'); 
   }
 };
