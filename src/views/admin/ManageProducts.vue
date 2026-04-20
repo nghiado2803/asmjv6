@@ -304,10 +304,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'; // THÊM computed Ở ĐÂY
+import { ref, onMounted, computed } from 'vue'; 
 import api from '@/api/index';
 // @ts-ignore
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
+
+// CẤU HÌNH POPUP LUXURY
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
+    cancelButton: 'btn btn-outline-secondary rounded-1 fw-bold px-4 py-2 ms-2 text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
 
 const products = ref<any[]>([]);
 const categories = ref<any[]>([]);
@@ -482,7 +492,8 @@ const saveProduct = async () => {
     productModalInstance?.hide();
     fetchData(); 
   } catch (error) {
-    alert("Lỗi khi lưu sản phẩm!");
+    // SỬA ĐỔI 1: Thay thế alert()
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi khi lưu sản phẩm!' });
   } finally {
     isSaving.value = false;
   }
@@ -505,12 +516,23 @@ const removeAlbumImage = (index: number) => {
 };
 
 const deleteProduct = async (id: number) => {
-  if (confirm('Cảnh báo: Hành động này sẽ xóa vĩnh viễn sản phẩm khỏi hệ thống. Xác nhận xóa?')) {
+  // SỬA ĐỔI 2: Thay thế confirm()
+  const result = await LuxuryAlert.fire({
+    icon: 'warning',
+    title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Cảnh báo</h4>',
+    text: 'Hành động này sẽ xóa vĩnh viễn sản phẩm khỏi hệ thống. Xác nhận xóa?',
+    showCancelButton: true,
+    confirmButtonText: 'Xác nhận xóa',
+    cancelButtonText: 'Hủy bỏ'
+  });
+
+  if (result.isConfirmed) {
     try {
       await api.delete(`/admin/products/${id}`);
       fetchData();
     } catch (error) {
-      alert("Không thể xóa tuyệt tác này (đã phát sinh giao dịch).");
+      // SỬA ĐỔI 3: Thay thế alert()
+      LuxuryAlert.fire({ icon: 'error', title: 'Không thể xóa', text: 'Không thể xóa tuyệt tác này (đã phát sinh giao dịch).' });
     }
   }
 };
@@ -531,7 +553,8 @@ const submitImport = async () => {
     importModalInstance?.hide();
     fetchData();
   } catch (error) {
-    alert("Lỗi khi nhập kho!");
+    // SỬA ĐỔI 4: Thay thế alert()
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi khi nhập kho!' });
   } finally {
     isSaving.value = false;
   }
@@ -617,7 +640,8 @@ const submitSale = async () => {
     fetchData();
   } catch (error) {
     console.error("Lỗi khi lưu khuyến mãi:", error);
-    alert("Lỗi cấu trúc thời gian! Vui lòng kiểm tra lại định dạng.");
+    // SỬA ĐỔI 5: Thay thế alert()
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi cấu trúc', text: 'Lỗi cấu trúc thời gian! Vui lòng kiểm tra lại định dạng.' });
   } finally {
     isSaving.value = false;
   }
