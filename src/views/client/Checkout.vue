@@ -88,7 +88,7 @@
             </div>
             <div class="card-body p-4 p-lg-5">
               
-              <div v-for="item in cartStore.items" :key="item.productId" class="d-flex align-items-center mb-4 pb-4 border-bottom border-dashed">
+              <div v-for="item in checkoutItems" :key="item.productId" class="d-flex align-items-center mb-4 pb-4 border-bottom border-dashed">
                 <div class="position-relative img-wrap bg-white border-gold-subtle p-1">
                   <img :src="getImageUrl(item.imageUrl)" class="img-fluid" style="width: 65px; height: 65px; object-fit: contain; mix-blend-mode: multiply;" @error="handleImageError">
                   <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-dark border border-light text-white" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px;">
@@ -110,16 +110,15 @@
               <div class="d-flex justify-content-between align-items-center mt-4 mb-5 pt-3 border-top border-gold-subtle">
                 <span class="fs-5 fw-bold text-uppercase letter-spacing-1">Tổng cộng</span>
                 <div class="text-end">
-                  <span class="fs-4 fw-bold text-danger luxury-font">{{ formatPrice(cartStore.totalPrice) }}</span>
+                  <span class="fs-4 fw-bold text-danger luxury-font">{{ formatPrice(checkoutTotal) }}</span>
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-gold w-100 btn-lg rounded-1 fw-bold py-3 text-uppercase letter-spacing-1" :disabled="cartStore.items.length === 0 || isSubmitting">
+              <button type="submit" class="btn btn-gold w-100 btn-lg rounded-1 fw-bold py-3 text-uppercase letter-spacing-1" :disabled="checkoutItems.length === 0 || isSubmitting">
                 <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
                 <span v-else><i class="bi bi-lock-fill me-2"></i> Xác nhận Đặt Hàng</span>
               </button>
 
-              
             </div>
           </div>
         </div>
@@ -130,16 +129,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore'; 
 import api from '@/api/index';
 
+const route = useRoute();
 const router = useRouter();
 const cartStore = useCartStore();
 
 const isSubmitting = ref(false);
 const order = reactive({ fullName: '', phoneNumber: '', address: '', note: '', paymentMethod: 'COD' });
+
+// --- LOGIC PHÂN LUỒNG MỚI ---
+// Tự động kiểm tra xem đang thanh toán Mua Ngay hay Giỏ hàng
+const checkoutItems = computed(() => {
+  if (route.query.type === 'buynow') {
+    const item = sessionStorage.getItem('buyNowItem');
+    return item ? JSON.parse(item) : [];
+  }
+  return cartStore.items;
+});
+
+const checkoutTotal = computed(() => {
+  return checkoutItems.value.reduce((total: number, item: any) => total + (item.price * item.quantity), 0);
+});
+// -----------------------------
 
 const getUserEmail = () => {
   try {
@@ -155,8 +170,8 @@ const getUserEmail = () => {
 };
 
 onMounted(async () => {
-  if (cartStore.items.length === 0) {
-    alert("Giỏ hàng của quý khách đang trống!");
+  if (checkoutItems.value.length === 0) {
+    alert("Không có sản phẩm nào để thanh toán!");
     router.push('/cart');
     return;
   }
@@ -199,7 +214,7 @@ const submitOrder = async () => {
     address: order.address,
     note: order.note,
     paymentMethod: order.paymentMethod,
-    items: cartStore.items.map(item => ({
+    items: checkoutItems.value.map((item: any) => ({
       productId: item.productId,
       name: item.name,
       price: item.price,
@@ -212,13 +227,12 @@ const submitOrder = async () => {
     const res = await api.post(`/orders/checkout?email=${encodeURIComponent(emailParam)}`, payload);
     const orderId = res.data.orderId;
     
-    // Nếu là thanh toán Banking -> Gọi API lấy link PayOS và chuyển hướng
     if (order.paymentMethod === 'BANKING') {
       try {
         const payRes = await api.post(`/orders/${orderId}/pay`);
         if (payRes.data && payRes.data.url) {
-          cartStore.clearCart();
-          window.location.href = payRes.data.url; // Chuyển sang trang PayOS
+          clearDataAfterOrder();
+          window.location.href = payRes.data.url; 
           return;
         }
       } catch (err) {
@@ -227,7 +241,7 @@ const submitOrder = async () => {
       }
     }
 
-    cartStore.clearCart(); 
+    clearDataAfterOrder(); 
     alert("Đặt hàng thành công! Mã đơn của quý khách: #" + (orderId || 'xxx'));
     router.push('/orders'); 
     
@@ -236,6 +250,15 @@ const submitOrder = async () => {
     alert("Có lỗi xảy ra khi đặt hàng. Vui lòng kiểm tra lại kết nối!");
   } finally {
     isSubmitting.value = false;
+  }
+};
+
+// Hàm dọn dẹp đúng chỗ: Thanh toán cái nào xóa cái đó
+const clearDataAfterOrder = () => {
+  if (route.query.type === 'buynow') {
+    sessionStorage.removeItem('buyNowItem');
+  } else {
+    cartStore.clearCart();
   }
 };
 </script>
