@@ -419,7 +419,6 @@ const addToCart = () => {
   
   const productToCart = { ...product.value, price: currentPrice };
   cartStore.addToCart(productToCart, quantity.value);
-  alert('Sản phẩm đã được thêm vào giỏ hàng thành công!');
 };
 
 const buyNow = () => {
@@ -427,9 +426,20 @@ const buyNow = () => {
     ? calculateSalePrice(product.value.price, product.value.discount) 
     : product.value.price;
   
-  const productToCart = { ...product.value, price: currentPrice };
-  cartStore.addToCart(productToCart, quantity.value);
-  router.push('/checkout');
+  // Đóng gói đúng 1 sản phẩm này
+  const buyNowItem = {
+    productId: product.value.id,
+    name: product.value.name,
+    price: currentPrice,
+    quantity: quantity.value,
+    imageUrl: product.value.imageUrl
+  };
+
+  // Lưu tạm vào bộ nhớ trình duyệt, KHÔNG đụng gì tới cartStore
+  sessionStorage.setItem('buyNowItem', JSON.stringify([buyNowItem]));
+
+  // Chuyển sang checkout kèm cờ ?type=buynow để trang bên kia biết
+  router.push('/checkout?type=buynow');
 };
 </script>
 
