@@ -10,16 +10,6 @@
           {{ step === 1 ? 'Vui lòng cung cấp email đã đăng ký để nhận mã xác thực OTP' : 'Xác thực mã OTP và thiết lập lại mật khẩu bảo mật' }}
         </p>
       </div>
-
-      <div v-if="errorMsg" class="alert custom-alert-danger mb-4 rounded-1 d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i> 
-        <span class="small fw-bold letter-spacing-1 text-uppercase">{{ errorMsg }}</span>
-      </div>
-      <div v-if="successMsg" class="alert custom-alert-success mb-4 rounded-1 d-flex align-items-center">
-        <i class="bi bi-check-circle-fill me-3 fs-5"></i> 
-        <span class="small fw-bold letter-spacing-1 text-uppercase">{{ successMsg }}</span>
-      </div>
-
       <form v-if="step === 1" @submit.prevent="requestOtp">
         <div class="mb-5 position-relative">
           <label class="form-label fw-bold text-muted text-uppercase letter-spacing-1 small mb-2 d-block">Địa chỉ Email</label>
@@ -81,13 +71,12 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/index';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const router = useRouter();
 
 const step = ref(1);
 const isLoading = ref(false);
-const errorMsg = ref('');
-const successMsg = ref('');
 
 const email = ref('');
 const form = reactive({
@@ -96,22 +85,52 @@ const form = reactive({
   confirmPassword: ''
 });
 
+// Cấu hình Swal theo chuẩn Luxury
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
+
 // BƯỚC 1: Gửi yêu cầu lấy OTP
 const requestOtp = async () => {
-  errorMsg.value = '';
-  successMsg.value = '';
+  if (!email.value) {
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Thiếu thông tin</h4>',
+      text: 'Vui lòng nhập địa chỉ email của bạn!',
+      confirmButtonText: 'Đã hiểu'
+    });
+    return;
+  }
+
   isLoading.value = true;
 
   try {
     await api.post('/auth/forgot-password', { email: email.value });
-    step.value = 2;
-    successMsg.value = 'Mã bảo mật OTP đã được gửi thành công.';
+    step.value = 2; // Chuyển sang bước 2
+    
+    // Hiện Toast nhẹ nhàng báo đã gửi mail
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Mã bảo mật OTP đã được gửi!',
+      text: 'Vui lòng kiểm tra hộp thư đến (hoặc thư rác).',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true
+    });
+    
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMsg.value = error.response.data.error;
-    } else {
-      errorMsg.value = 'Lỗi kết nối đến máy chủ.';
-    }
+    const backendError = error.response?.data?.error || 'Lỗi kết nối đến máy chủ. Vui lòng thử lại sau!';
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Không thể gửi yêu cầu</h4>',
+      text: backendError,
+      confirmButtonText: 'Đóng'
+    });
   } finally {
     isLoading.value = false;
   }
@@ -119,11 +138,24 @@ const requestOtp = async () => {
 
 // BƯỚC 2: Cập nhật mật khẩu mới
 const resetPassword = async () => {
-  errorMsg.value = '';
-  successMsg.value = '';
-
+  // Validate bằng Popup
   if (form.newPassword !== form.confirmPassword) {
-    errorMsg.value = 'Mật khẩu xác nhận không trùng khớp!';
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Lỗi xác nhận</h4>',
+      text: 'Mật khẩu xác nhận không trùng khớp!',
+      confirmButtonText: 'Kiểm tra lại'
+    });
+    return;
+  }
+
+  if (form.newPassword.length < 6) {
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Mật khẩu yếu</h4>',
+      text: 'Mật khẩu phải có ít nhất 6 ký tự để đảm bảo an toàn.',
+      confirmButtonText: 'Đã hiểu'
+    });
     return;
   }
 
@@ -138,19 +170,25 @@ const resetPassword = async () => {
 
     const res = await api.post('/auth/reset-password', payload);
     
-    successMsg.value = res.data.message || 'Thiết lập mật khẩu thành công!';
+    // Hiện popup chúc mừng và chờ user bấm OK để về trang Login
+    await LuxuryAlert.fire({
+      icon: 'success',
+      title: '<h3 class="luxury-font fw-bold mb-0 text-dark">Hoàn Tất</h3>',
+      text: res.data.message || 'Thiết lập mật khẩu thành công!',
+      confirmButtonText: 'Đăng nhập ngay'
+    });
     
-    // Đổi pass xong, đẩy về Login sau 2 giây
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+    // Chỉ chuyển trang khi user đã xem xong thông báo và bấm nút
+    router.push('/login');
 
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMsg.value = error.response.data.error;
-    } else {
-      errorMsg.value = 'Mã OTP không hợp lệ hoặc đã hết hạn.';
-    }
+    const backendError = error.response?.data?.error || 'Mã OTP không hợp lệ hoặc đã hết hạn.';
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác thực thất bại</h4>',
+      text: backendError,
+      confirmButtonText: 'Thử lại'
+    });
   } finally {
     isLoading.value = false;
   }
