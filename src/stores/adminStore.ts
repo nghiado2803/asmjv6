@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '@/api/index';
 import type { AdminStats, Order, User } from '@/types/admin';
+import Swal from 'sweetalert2';
 
 export const useAdminStore = defineStore('admin', {
   state: () => ({
@@ -29,7 +30,16 @@ export const useAdminStore = defineStore('admin', {
         // Sau khi update thành công, refresh lại data
         await this.fetchDashboard();
       } catch (error) {
-        alert("Không thể cập nhật trạng thái đơn hàng");
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Không thể cập nhật trạng thái đơn hàng',
+          confirmButtonText: 'Đóng',
+          customClass: {
+            confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+          },
+          buttonsStyling: false
+        });
       }
     }
   }
