@@ -9,12 +9,6 @@
           <div class="divider-gold mx-auto mt-2 mb-3"></div>
           <p class="login-subtitle letter-spacing-1 small">Mở khóa đặc quyền dành riêng cho khách hàng VIP</p>
         </div>
-
-        <div v-if="errorMsg" class="alert custom-alert-danger mb-4 rounded-1 d-flex align-items-center">
-          <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i> 
-          <span class="small fw-bold letter-spacing-1 text-uppercase">{{ errorMsg }}</span>
-        </div>
-
         <form @submit.prevent="submitRegister">
           <div class="mb-4 position-relative">
             <label class="form-label fw-bold text-muted text-uppercase letter-spacing-1 small mb-2 d-block">Họ và tên</label>
@@ -65,15 +59,6 @@
           <p class="text-muted small letter-spacing-1 lh-lg">Mã bảo mật OTP đã được gửi đến email:<br><strong class="text-dark border-bottom border-gold-subtle pb-1">{{ form.email }}</strong></p>
         </div>
 
-        <div v-if="errorMsg" class="alert custom-alert-danger mb-4 rounded-1 d-flex align-items-center">
-          <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i> 
-          <span class="small fw-bold letter-spacing-1 text-uppercase">{{ errorMsg }}</span>
-        </div>
-        <div v-if="successMsg" class="alert custom-alert-success mb-4 rounded-1 d-flex align-items-center">
-          <i class="bi bi-check-circle-fill me-3 fs-5"></i> 
-          <span class="small fw-bold letter-spacing-1 text-uppercase">{{ successMsg }}</span>
-        </div>
-
         <form @submit.prevent="submitVerify">
           <div class="mb-5 text-center px-4">
             <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1 d-block mb-3">Mã OTP 6 số</label>
@@ -103,13 +88,12 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/index'; 
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const router = useRouter();
 
 const step = ref(1); 
 const isLoading = ref(false);
-const errorMsg = ref('');
-const successMsg = ref('');
 
 const form = reactive({
   fullName: '',
@@ -119,28 +103,84 @@ const form = reactive({
 
 const otpCode = ref('');
 
+// Cấu hình Swal theo chuẩn Luxury
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
+
+// BƯỚC 1: Xử lý Đăng ký (Gửi thông tin và nhận OTP)
 const submitRegister = async () => {
-  errorMsg.value = '';
+  // Validate cơ bản trước khi gửi
+  if (!form.fullName || !form.email || !form.password) {
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Thiếu thông tin</h4>',
+      text: 'Vui lòng điền đầy đủ Họ tên, Email và Mật khẩu!',
+      confirmButtonText: 'Đã hiểu'
+    });
+    return;
+  }
+
+  if (form.password.length < 6) {
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Mật khẩu yếu</h4>',
+      text: 'Mật khẩu bảo mật phải có ít nhất 6 ký tự.',
+      confirmButtonText: 'Kiểm tra lại'
+    });
+    return;
+  }
+
   isLoading.value = true;
   
   try {
     await api.post('/auth/register', form);
+    
+    // Chuyển sang giao diện nhập OTP
     step.value = 2; 
+    
+    // Hiện Toast nhẹ nhàng ở góc phải
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Mã xác thực đã được gửi!',
+      text: 'Vui lòng kiểm tra hộp thư đến của bạn.',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true
+    });
+
   } catch (error) {
     console.error("Lỗi đăng ký:", error);
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMsg.value = error.response.data.error;
-    } else {
-      errorMsg.value = 'Lỗi hệ thống. Vui lòng thử lại sau.';
-    }
+    const backendError = error.response?.data?.error || 'Hệ thống đang gián đoạn. Vui lòng thử lại sau.';
+    
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Đăng ký thất bại</h4>',
+      text: backendError,
+      confirmButtonText: 'Đóng'
+    });
   } finally {
     isLoading.value = false;
   }
 };
 
+// BƯỚC 2: Xử lý Xác thực OTP
 const submitVerify = async () => {
-  errorMsg.value = '';
-  successMsg.value = '';
+  if (!otpCode.value || otpCode.value.length < 6) {
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Chưa hợp lệ</h4>',
+      text: 'Vui lòng nhập đúng 6 số mã xác thực OTP.',
+      confirmButtonText: 'Đã hiểu'
+    });
+    return;
+  }
+
   isLoading.value = true;
   
   try {
@@ -151,25 +191,32 @@ const submitVerify = async () => {
 
     const res = await api.post('/auth/verify-otp', payload);
     
-    successMsg.value = res.data.message || 'Xác thực hồ sơ VIP thành công!';
+    // Chúc mừng và chờ người dùng thao tác để về trang đăng nhập
+    await LuxuryAlert.fire({
+      icon: 'success',
+      title: '<h3 class="luxury-font fw-bold mb-0 text-dark">Chúc Mừng</h3>',
+      text: res.data.message || 'Xác thực hồ sơ VIP thành công!',
+      confirmButtonText: 'Đăng nhập ngay'
+    });
     
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+    // Đẩy về trang đăng nhập sau khi bấm nút
+    router.push('/login');
 
   } catch (error) {
     console.error("Lỗi xác thực:", error);
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMsg.value = error.response.data.error;
-    } else {
-      errorMsg.value = 'Mã xác thực không hợp lệ hoặc đã hết hạn.';
-    }
+    const backendError = error.response?.data?.error || 'Mã xác thực không hợp lệ hoặc đã hết hạn.';
+    
+    LuxuryAlert.fire({
+      icon: 'error',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác thực thất bại</h4>',
+      text: backendError,
+      confirmButtonText: 'Nhập lại'
+    });
   } finally {
     isLoading.value = false;
   }
 };
 </script>
-
 <style scoped>
 /* ==========================================
    GIAO DIỆN LUXURY REGISTER & OTP
