@@ -230,6 +230,16 @@ import { ref, onMounted } from 'vue';
 import api from '@/api/index';
 // @ts-ignore
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
+
+// CẤU HÌNH POPUP LUXURY
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
+    cancelButton: 'btn btn-outline-secondary rounded-1 fw-bold px-4 py-2 ms-2 text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
 
 interface OrderDetail {
   productName: string;
@@ -308,22 +318,50 @@ const formatDate = (dateString: string) => {
 };
 
 const handleUpdateStatus = async (orderId: number, newStatus: string, confirmMsg: string | null) => {
-  if (confirmMsg && !confirm(confirmMsg)) return;
+  // SỬA ĐỔI 1: Thay thế confirm()
+  if (confirmMsg) {
+    const result = await LuxuryAlert.fire({
+      icon: 'question',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác nhận</h4>',
+      text: confirmMsg,
+      showCancelButton: true,
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy bỏ'
+    });
+    if (!result.isConfirmed) return;
+  }
+
   try {
     await api.post('/admin/orders/update-status', { orderId, status: newStatus });
     await fetchOrders(); 
+    
+    // Tùy chọn: Thêm Toast mượt mà báo thành công (Bỏ qua nếu không cần)
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công!', showConfirmButton: false, timer: 2000 });
   } catch (error) {
-    alert("Cập nhật trạng thái thất bại!");
+    // SỬA ĐỔI 2: Thay thế alert()
+    LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Cập nhật trạng thái thất bại!' });
   }
 };
 
 const confirmPayment = async (orderId: number) => {
-  if (confirm('Xác nhận ĐÃ THU TIỀN MẶT thành công từ giao dịch này?')) {
+  // SỬA ĐỔI 3: Thay thế confirm()
+  const result = await LuxuryAlert.fire({
+    icon: 'question',
+    title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác nhận thu tiền</h4>',
+    text: 'Xác nhận ĐÃ THU TIỀN MẶT thành công từ giao dịch này?',
+    showCancelButton: true,
+    confirmButtonText: 'Xác nhận',
+    cancelButtonText: 'Hủy bỏ'
+  });
+
+  if (result.isConfirmed) {
     try {
       await api.post('/admin/orders/confirm-payment', { orderId }); 
       await fetchOrders(); 
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xác nhận thanh toán!', showConfirmButton: false, timer: 2000 });
     } catch (error) {
-      alert("Lỗi xác nhận thanh toán!");
+      // SỬA ĐỔI 4: Thay thế alert()
+      LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi xác nhận thanh toán!' });
     }
   }
 };
