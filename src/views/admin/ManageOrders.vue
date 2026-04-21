@@ -62,36 +62,47 @@
               <td class="text-end pe-4 py-3" @dblclick.stop>
                 <div class="d-flex justify-content-end gap-2 align-items-center">
                   
-                  <button v-if="!['Chuyển khoản', 'BANK_TRANSFER', 'BANKING'].includes(order.paymentMethod) && order.paymentStatus !== 'Đã thanh toán' && order.status !== 'Đã hủy'" 
-                          @click="confirmPayment(order.id)" 
-                          class="btn btn-sm btn-outline-success action-btn shadow-sm" 
-                          title="Xác nhận đã thu tiền mặt">
-                    <i class="bi bi-cash-stack"></i>
-                  </button>
-
-                  <template v-if="order.status === 'Đang giao'">
-                    <button @click="handleUpdateStatus(order.id, 'Hoàn thành', 'Khách hàng đã nhận được sản phẩm thành công?')" 
-                            class="btn btn-sm btn-dark action-btn shadow-sm" title="Xác nhận Hoàn thành">
-                      <i class="bi bi-check2-all"></i>
-                    </button>
+                  <template v-if="order.status === 'Đã hủy'">
+                    <span class="text-muted opacity-50 ms-2" title="Đơn hàng đã hủy"><i class="bi bi-slash-circle fs-4"></i></span>
                   </template>
                   
-                  <template v-else-if="order.status === 'Hoàn thành' || order.status === 'Đã hủy'">
-                    </template>
+                  <template v-else-if="order.status === 'Hoàn thành'">
+                    <span class="text-success ms-2" title="Hoàn thành xuất sắc"><i class="bi bi-shield-check fs-4"></i></span>
+                  </template>
                   
                   <template v-else>
-                    <button @click="handleUpdateStatus(order.id, 'Đang giao', null)" 
-                            class="btn btn-sm btn-gold shadow-sm action-btn border-0 text-dark" title="Tiến hành Giao hàng">
-                      <i class="bi bi-truck"></i>
+                    <button v-if="!['Chuyển khoản', 'BANK_TRANSFER', 'BANKING'].includes(order.paymentMethod) && order.paymentStatus !== 'Đã thanh toán'" 
+                            @click="confirmPayment(order.id)" 
+                            class="btn btn-sm btn-outline-success action-btn shadow-sm" 
+                            title="Xác nhận đã thu tiền mặt">
+                      <i class="bi bi-cash-stack"></i>
                     </button>
-                    <button @click="handleUpdateStatus(order.id, 'Đã hủy', 'Cảnh báo: Quý khách có chắc chắn muốn HỦY giao dịch này?')" 
+
+                    <template v-if="order.status === 'Đang giao'">
+                      <button v-if="order.paymentStatus === 'Đã thanh toán'" 
+                              @click="handleUpdateStatus(order.id, 'Hoàn thành', 'Khách hàng đã nhận được sản phẩm thành công?')" 
+                              class="btn btn-sm btn-dark action-btn shadow-sm" title="Xác nhận Hoàn thành">
+                        <i class="bi bi-check2-all"></i>
+                      </button>
+                      <button v-else 
+                              class="btn btn-sm btn-secondary action-btn shadow-sm opacity-50" 
+                              title="Chưa thu tiền, không thể hoàn thành" disabled style="cursor: not-allowed;">
+                        <i class="bi bi-check2-all"></i>
+                      </button>
+                    </template>
+                    
+                    <template v-else>
+                      <button @click="handleUpdateStatus(order.id, 'Đang giao', null)" 
+                              class="btn btn-sm btn-gold shadow-sm action-btn border-0 text-dark" title="Tiến hành Giao hàng">
+                        <i class="bi bi-truck"></i>
+                      </button>
+                    </template>
+                    
+                    <button @click="handleUpdateStatus(order.id, 'Đã hủy', 'Cảnh báo: Quý khách có chắc chắn muốn HỦY giao dịch này? Hệ thống sẽ hoàn sản phẩm vào kho!')" 
                             class="btn btn-sm btn-light border-gold-subtle text-danger action-btn shadow-sm hover-danger" title="Hủy đơn hàng">
                       <i class="bi bi-x-lg"></i>
                     </button>
                   </template>
-
-                  <span v-if="order.status === 'Hoàn thành'" class="text-success ms-2"><i class="bi bi-shield-check fs-4"></i></span>
-                  <span v-if="order.status === 'Đã hủy'" class="text-muted opacity-50 ms-2"><i class="bi bi-slash-circle fs-4"></i></span>
                   
                 </div>
               </td>
@@ -230,9 +241,8 @@ import { ref, onMounted } from 'vue';
 import api from '@/api/index';
 // @ts-ignore
 import { Modal } from 'bootstrap';
-import Swal from 'sweetalert2'; // CHỈ THÊM DÒNG NÀY
+import Swal from 'sweetalert2';
 
-// CẤU HÌNH POPUP LUXURY
 const LuxuryAlert = Swal.mixin({
   customClass: {
     confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1',
@@ -318,7 +328,6 @@ const formatDate = (dateString: string) => {
 };
 
 const handleUpdateStatus = async (orderId: number, newStatus: string, confirmMsg: string | null) => {
-  // SỬA ĐỔI 1: Thay thế confirm()
   if (confirmMsg) {
     const result = await LuxuryAlert.fire({
       icon: 'question',
@@ -335,16 +344,13 @@ const handleUpdateStatus = async (orderId: number, newStatus: string, confirmMsg
     await api.post('/admin/orders/update-status', { orderId, status: newStatus });
     await fetchOrders(); 
     
-    // Tùy chọn: Thêm Toast mượt mà báo thành công (Bỏ qua nếu không cần)
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công!', showConfirmButton: false, timer: 2000 });
   } catch (error) {
-    // SỬA ĐỔI 2: Thay thế alert()
     LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Cập nhật trạng thái thất bại!' });
   }
 };
 
 const confirmPayment = async (orderId: number) => {
-  // SỬA ĐỔI 3: Thay thế confirm()
   const result = await LuxuryAlert.fire({
     icon: 'question',
     title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Xác nhận thu tiền</h4>',
@@ -360,13 +366,11 @@ const confirmPayment = async (orderId: number) => {
       await fetchOrders(); 
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xác nhận thanh toán!', showConfirmButton: false, timer: 2000 });
     } catch (error) {
-      // SỬA ĐỔI 4: Thay thế alert()
       LuxuryAlert.fire({ icon: 'error', title: 'Lỗi', text: 'Lỗi xác nhận thanh toán!' });
     }
   }
 };
 
-// Hàm phụ trợ tạo Class CSS cho Badges Trạng thái
 const getStatusClass = (status: string): string => {
   switch (status) {
     case 'Hoàn thành': return 'status-success';
