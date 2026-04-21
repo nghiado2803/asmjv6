@@ -133,6 +133,14 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore'; 
 import api from '@/api/index';
+import Swal from 'sweetalert2';
+
+const LuxuryAlert = Swal.mixin({
+  customClass: {
+    confirmButton: 'btn btn-gold rounded-1 fw-bold px-4 py-2 shadow-sm text-uppercase letter-spacing-1'
+  },
+  buttonsStyling: false
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -141,10 +149,23 @@ const cartStore = useCartStore();
 const isSubmitting = ref(false);
 const order = reactive({ fullName: '', phoneNumber: '', address: '', note: '', paymentMethod: 'COD' });
 
-// --- LOGIC PHÂN LUỒNG MỚI ---
-// Tự động kiểm tra xem đang thanh toán Mua Ngay hay Giỏ hàng
+// KHÔI PHỤC GIỎ HÀNG NGAY TỪ ĐẦU NẾU LÀ TỪ PAYOS ĐÁ VỀ
+if (route.query.cancel === 'true') {
+  const checkoutType = sessionStorage.getItem('checkoutType');
+  if (checkoutType === 'cart') {
+    const backupCart = sessionStorage.getItem('backupCart');
+    if (backupCart) {
+      cartStore.items = JSON.parse(backupCart);
+      localStorage.setItem('cart', backupCart); 
+    }
+  }
+  // Xóa rác URL
+  router.replace({ path: '/checkout', query: { type: checkoutType || 'cart' } });
+}
+
 const checkoutItems = computed(() => {
-  if (route.query.type === 'buynow') {
+  const isBuyNow = route.query.type === 'buynow' || sessionStorage.getItem('checkoutType') === 'buynow';
+  if (isBuyNow) {
     const item = sessionStorage.getItem('buyNowItem');
     return item ? JSON.parse(item) : [];
   }
@@ -154,30 +175,28 @@ const checkoutItems = computed(() => {
 const checkoutTotal = computed(() => {
   return checkoutItems.value.reduce((total: number, item: any) => total + (item.price * item.quantity), 0);
 });
-// -----------------------------
 
 const getUserEmail = () => {
   try {
     let email = localStorage.getItem('user') || localStorage.getItem('email');
-    if (email) {
-      email = email.replace(/"/g, ''); 
-      return email;
-    }
-  } catch (e) {
-    return '';
-  }
+    if (email) return email.replace(/"/g, ''); 
+  } catch (e) { return ''; }
   return '';
 };
 
 onMounted(async () => {
+  // Nếu vẫn không có hàng thì mới đá ra ngoài
   if (checkoutItems.value.length === 0) {
-    alert("Không có sản phẩm nào để thanh toán!");
-    router.push('/cart');
+    LuxuryAlert.fire({
+      icon: 'warning',
+      title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Chưa có sản phẩm</h4>',
+      text: 'Không có sản phẩm nào để tiến hành thanh toán!',
+      confirmButtonText: 'Quay lại giỏ hàng'
+    }).then(() => router.push('/cart'));
     return;
   }
 
   const emailParam = getUserEmail();
-  
   if (emailParam) {
     try {
       const res = await api.get(`/orders/user-info?email=${encodeURIComponent(emailParam)}`);
@@ -186,23 +205,17 @@ onMounted(async () => {
         order.phoneNumber = res.data.phoneNumber || '';
         order.address = res.data.address || '';
       }
-    } catch (error) {
-      console.error("Lỗi lấy thông tin người dùng:", error);
-    }
+    } catch (error) { console.error(error); }
   }
 });
 
 const formatPrice = (val: number) => new Intl.NumberFormat('vi-VN').format(val) + ' ₫';
-
 const getImageUrl = (img: string) => {
   if (!img) return 'https://via.placeholder.com/80';
   if (img.startsWith('http')) return img;
   return `http://localhost:8080/images/${img}`; 
 };
-
-const handleImageError = (e: any) => {
-  e.target.src = 'https://via.placeholder.com/80';
-};
+const handleImageError = (e: any) => { e.target.src = 'https://via.placeholder.com/80'; };
 
 const submitOrder = async () => {
   isSubmitting.value = true;
@@ -227,94 +240,82 @@ const submitOrder = async () => {
     const res = await api.post(`/orders/checkout?email=${encodeURIComponent(emailParam)}`, payload);
     const orderId = res.data.orderId;
     
+    // GHI NHỚ LẠI LOẠI ĐƠN ĐỂ PHỤC HỒI NẾU BỊ ĐÁ VỀ
+    sessionStorage.setItem('checkoutType', route.query.type === 'buynow' ? 'buynow' : 'cart');
+    
     if (order.paymentMethod === 'BANKING') {
       try {
+        // LƯU TRỮ LẠI GIỎ HÀNG HIỆN TẠI VÀO KÉT SẮT TRƯỚC KHI SANG PAYOS
+        if (route.query.type !== 'buynow') {
+          sessionStorage.setItem('backupCart', JSON.stringify(cartStore.items));
+        }
+
         const payRes = await api.post(`/orders/${orderId}/pay`);
         if (payRes.data && payRes.data.url) {
-          clearDataAfterOrder();
+          // BỎ LỆNH XÓA GIỎ HÀNG Ở ĐÂY ĐỂ ĐỀ PHÒNG KHÁCH BẤM HỦY
           window.location.href = payRes.data.url; 
           return;
         }
       } catch (err) {
         console.error("Lỗi gọi PayOS:", err);
-        alert("Có lỗi khi tạo link thanh toán, vui lòng thanh toán sau trong trang chi tiết đơn hàng.");
+        LuxuryAlert.fire({ icon: 'warning', title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Lỗi cổng thanh toán</h4>', text: 'Có lỗi khi tạo link thanh toán, Quý khách vui lòng thanh toán sau trong trang chi tiết đơn hàng.', confirmButtonText: 'Đã hiểu' });
       }
     }
 
     clearDataAfterOrder(); 
-    alert("Đặt hàng thành công! Mã đơn của quý khách: #" + (orderId || 'xxx'));
+    
+    await LuxuryAlert.fire({
+      icon: 'success',
+      title: '<h3 class="luxury-font fw-bold mb-0 text-dark">Đặt Hàng Thành Công</h3>',
+      html: `Mã đơn hàng của Quý khách: <b class="gold-text">#${orderId || 'xxx'}</b>`,
+      confirmButtonText: 'Xem đơn hàng'
+    });
+    
     router.push('/orders'); 
     
   } catch (error) {
-    console.error("Lỗi đặt hàng:", error);
-    alert("Có lỗi xảy ra khi đặt hàng. Vui lòng kiểm tra lại kết nối!");
+    LuxuryAlert.fire({ icon: 'error', title: '<h4 class="luxury-font fw-bold mb-0 text-dark">Đặt hàng thất bại</h4>', text: 'Có lỗi xảy ra khi đặt hàng. Vui lòng kiểm tra lại kết nối mạng!', confirmButtonText: 'Đóng' });
   } finally {
     isSubmitting.value = false;
   }
 };
 
-// Hàm dọn dẹp đúng chỗ: Thanh toán cái nào xóa cái đó
 const clearDataAfterOrder = () => {
   if (route.query.type === 'buynow') {
     sessionStorage.removeItem('buyNowItem');
   } else {
     cartStore.clearCart();
+    sessionStorage.removeItem('backupCart');
   }
+  sessionStorage.removeItem('checkoutType');
 };
 </script>
 
 <style scoped>
-/* ==========================================
-   GIAO DIỆN LUXURY CHECKOUT
-========================================== */
 .checkout-page { font-family: 'Helvetica Neue', Arial, sans-serif; }
 .luxury-font { font-family: 'Montserrat', sans-serif; }
 .letter-spacing-1 { letter-spacing: 1px; }
-
-/* Colors & Basics */
 .gold-text { color: #B38728 !important; }
-.text-danger { color: #8b0000 !important; } /* Đỏ mận sang trọng */
+.text-danger { color: #8b0000 !important; } 
 .border-gold-subtle { border: 1px solid #eaeaea !important; }
 .divider-gold { width: 60px; height: 3px; background: linear-gradient(to right, #B38728, #FBF5B7, #D4AF37); }
-
-/* Inputs (Giao hàng) */
 .custom-input-group { border: 1px solid #e0e0e0; border-radius: 2px; transition: all 0.3s ease; background: #fafafa; }
 .custom-input-group .input-group-text { background-color: transparent; border: none; color: #B38728; }
 .custom-input-group .form-control { border: none; background-color: transparent; box-shadow: none; padding-left: 0; font-size: 15px; }
 .custom-input-group:focus-within { border-color: #D4AF37; background: #fff; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-
 .custom-textarea { border: 1px solid #e0e0e0; border-radius: 2px; background: #fafafa; transition: all 0.3s; box-shadow: none; font-size: 15px; padding: 12px; }
 .custom-textarea:focus { border-color: #D4AF37; background: #fff; outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-
-/* Phương thức thanh toán */
 .payment-check { display: none; }
 .payment-option { border: 1px solid #e0e0e0; transition: all 0.3s ease; cursor: pointer; background: #fff; }
 .payment-option .icon-wrapper { color: #aaa; transition: 0.3s; }
-
 .payment-option:hover { border-color: #D4AF37; background-color: #fdfbf7; }
 .payment-option:hover .icon-wrapper { color: #D4AF37; }
-
-.payment-check:checked + .payment-label .payment-option { 
-  border-color: #D4AF37; 
-  background-color: #fdfbf7; 
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); 
-}
+.payment-check:checked + .payment-label .payment-option { border-color: #D4AF37; background-color: #fdfbf7; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); }
 .payment-check:checked + .payment-label .payment-option .icon-wrapper { color: #D4AF37; }
-
-/* Tóm tắt đơn hàng */
-.summary-card { background: #fdfbf7; } /* Màu nền kem sữa nhạt */
+.summary-card { background: #fdfbf7; } 
 .img-wrap { border: 1px solid #e0e0e0; border-radius: 2px; }
 .border-dashed { border-bottom: 1px dashed #dcdcdc !important; }
-
-/* Nút Submit */
-.btn-gold {
-  background: linear-gradient(135deg, #D4AF37 0%, #FBF5B7 50%, #B38728 100%);
-  color: #111 !important; border: 1px solid #D4AF37;
-  transition: all 0.4s ease;
-}
-.btn-gold:hover:not(:disabled) {
-  background: linear-gradient(135deg, #FBF5B7 0%, #D4AF37 50%, #AA771C 100%);
-  transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-}
+.btn-gold { background: linear-gradient(135deg, #D4AF37 0%, #FBF5B7 50%, #B38728 100%); color: #111 !important; border: 1px solid #D4AF37; transition: all 0.4s ease; }
+.btn-gold:hover:not(:disabled) { background: linear-gradient(135deg, #FBF5B7 0%, #D4AF37 50%, #AA771C 100%); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
 .btn-gold:disabled { opacity: 0.7; filter: grayscale(50%); cursor: not-allowed; }
 </style>
